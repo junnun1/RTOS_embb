@@ -5,7 +5,9 @@ PC-side compression과 STM32N6 compiler validation을 완료한 상태를 기록
 
 ## 1. Current State
 
-현재 단계는 **STM32N657 board bring-up 직전**이다.
+현재 단계는 **보드 도착 전 RTOS preparation**이다. PC compression과 compiler
+validation은 끝났으며, board-independent architecture와 portable firmware skeleton을
+먼저 준비한 뒤 STM32N657 bring-up으로 이동한다.
 
 완료된 end-to-end 경로:
 
@@ -191,7 +193,23 @@ python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 
 ## 8. Immediate Next Work
 
-현재 compression 실험을 반복하지 말고 firmware 단계로 이동한다.
+현재 compression 실험을 반복하지 않는다.
+
+### Before board arrival
+
+1. `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` contract를 확정한다.
+2. period/deadline/priority 초깃값과 metrics ownership을 정의한다.
+3. release/start/end timestamp, execution/response time, deadline miss를 담는 record를 정의한다.
+4. DWT CYCCNT profiler interface와 wrap-around/cycle conversion 정책을 설계한다.
+5. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
+6. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
+7. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
+8. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 작성한다.
+
+보드가 없으므로 CPU clock, peripheral handle, memory address, generated AI symbol을
+임의로 hardcode하지 않는다.
+
+### After board arrival
 
 1. STM32CubeIDE/CubeMX project 구조를 준비한다.
 2. baseline PTQ generated Neural-ART runtime을 firmware에 통합한다.
@@ -238,10 +256,10 @@ Before editing, run `git status --short` and preserve unrelated user changes.
 
 ## 11. Git Reference
 
-Last pushed experiment commit before this documentation refresh:
+Last pushed commit before the current RTOS-plan documentation adjustment:
 
 ```text
-fd15793 Add teacher KD pipeline and STM32 analysis
+bd9b53f Refresh project documentation and roadmap
 ```
 
 Always use `git status --short` and `git log -1 --oneline` instead of assuming this

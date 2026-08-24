@@ -3,8 +3,9 @@
 ## Current Phase
 
 PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포 후보는
-`student_baseline_int8_qdq.onnx`이며, 다음 단계는 STM32N657 board bring-up과
-FreeRTOS inference integration이다.
+`student_baseline_int8_qdq.onnx`이다. 다음 단계는 보드 도착을 기다리지 않고
+진행할 수 있는 RTOS architecture, measurement contract, portable firmware skeleton
+준비다. 그 다음에 STM32N657 board bring-up과 실제 inference를 수행한다.
 
 ## Completed: PC Compression and Validation
 
@@ -53,28 +54,75 @@ FreeRTOS inference integration이다.
 QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. baseline PTQ 손실이
 0.13%p이고 KD PTQ 손실도 0.04%p이므로 추가 학습 비용의 근거가 없다.
 
-## Next: Firmware Preparation
+## Next: Pre-board RTOS Preparation
 
-### P0 — board bring-up 전 준비
+### P0 — 바로 진행
 
-- [ ] STM32CubeIDE/CubeMX project 구조 확정
-- [ ] ST Edge AI generated runtime 통합 절차 정리
+- [ ] `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` 역할 확정
+- [ ] task period, relative deadline, priority 초깃값 확정
+- [ ] task 간 공유 metrics 구조와 ownership 정의
+- [ ] DWT CYCCNT 기반 profiler interface 설계
+- [ ] cycle counter wrap-around와 cycle-to-time 변환 정책 정의
+- [ ] mean/min/max와 p95 집계 방식 결정
+- [ ] UART CSV log schema 정의
+- [ ] synthetic workload의 0/20/40/60/80% 부하 생성 방식 정의
+- [ ] QoS 33/66/100 ms와 hysteresis/cooldown 규칙 정의
+- [ ] hardware dependency를 분리한 portable C skeleton 작성
+
+### P1 — 보드 연동용 산출물 준비
+
 - [ ] baseline PTQ input/output tensor interface 정의
 - [ ] preloaded CIFAR-10 test vector와 expected output 생성
-- [ ] DWT CYCCNT profiler interface 설계
-- [ ] UART CSV log schema 정의
-- [ ] FreeRTOS task period, deadline, priority 초깃값 확정
+- [ ] ST Edge AI generated runtime adapter interface 정의
+- [ ] CubeMX 생성 프로젝트에 연결할 integration checklist 작성
 
 ### Proposed initial tasks
 
 | Task | Initial period | Relative deadline | Initial priority |
 |---|---:|---:|---|
-| Inference | 33 ms | 33 ms | Medium-High |
+| Inference | 33 ms | 33 ms | High |
 | Background workload | configurable | configurable | Medium |
 | Monitor | 100 ms | 100 ms | Medium |
 | Logger | 1000 ms | 1000 ms | Low |
 
 Capture와 camera는 최초 inference 검증 이후 추가한다.
+
+### Required metrics fields
+
+```text
+release_timestamp
+start_timestamp
+end_timestamp
+execution_time
+response_time
+deadline_miss
+iteration
+background_load
+queue_backlog
+qos_level
+```
+
+### Initial UART CSV schema
+
+```csv
+timestamp_ms,task_name,iteration,period_ms,execution_us,response_us,deadline_miss,background_load,qos_level
+```
+
+### Portable firmware skeleton
+
+```text
+firmware/RTOS/task_inference.c/.h
+firmware/RTOS/task_background.c/.h
+firmware/RTOS/task_monitor.c/.h
+firmware/RTOS/task_logger.c/.h
+firmware/System/profiler.c/.h
+firmware/System/system_metrics.c/.h
+firmware/System/qos_controller.c/.h
+firmware/AI/ai_model_adapter.c/.h
+```
+
+보드와 CubeMX 생성 파일이 없으므로 이 단계에서는 HAL·FreeRTOS 연결부를 adapter로
+분리한다. 실제 board clock, memory address, peripheral handle은 임의로 확정하지 않는다.
 
 ## Board Arrival: First-Day Checklist
 

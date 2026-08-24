@@ -133,6 +133,18 @@ RAM
 
 AI task와 background workload를 동시에 실행한다.
 
+보드 도착 전에 다음 실험 contract와 portable skeleton을 먼저 준비한다.
+
+- Inference/Background/Monitor/Logger task 정의
+- period, deadline, priority 초깃값
+- DWT profiler와 공통 metrics record
+- UART CSV schema
+- 0/20/40/60/80% synthetic workload 정의
+- 33/66/100 ms inference-period QoS 정의
+
+실제 timing 결과는 보드에서만 기록한다. host stub이나 compiler estimate를
+on-target RTOS 결과로 사용하지 않는다.
+
 Background workload level:
 
 ```text

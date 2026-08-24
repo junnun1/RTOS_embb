@@ -4,7 +4,8 @@ STM32N657의 Neural-ART NPU에서 INT8 CNN을 실행하고, FreeRTOS task interf
 AI latency와 deadline에 미치는 영향을 측정한 뒤 adaptive QoS로 확장하는 프로젝트다.
 
 현재 **PC-side compression과 ST Edge AI compiler 검증을 완료**했다. 다음 단계는
-STM32N657 firmware bring-up과 on-target inference 측정이다.
+보드 도착 전에 수행할 RTOS architecture·profiler·metrics·portable skeleton 준비이며,
+그 다음 STM32N657 firmware bring-up과 on-target inference를 수행한다.
 
 ## Current Results
 
@@ -117,9 +118,19 @@ firmware/      future STM32N657/FreeRTOS implementation
 
 ## Next Phase
 
+보드 도착 전:
+
+1. Inference/Background/Monitor/Logger task contract를 확정한다.
+2. task priority, period, deadline과 metrics ownership을 정의한다.
+3. DWT profiler interface, UART CSV schema, synthetic workload를 설계한다.
+4. 33/66/100 ms inference-period QoS와 hysteresis를 정의한다.
+5. HAL/FreeRTOS dependency를 adapter로 분리한 portable C skeleton을 작성한다.
+
+보드 도착 후:
+
 1. STM32CubeIDE project와 generated Neural-ART runtime을 통합한다.
 2. preloaded test vector로 baseline PTQ 단일 inference를 검증한다.
-3. DWT cycle counter로 latency를 측정하고 UART CSV 로그를 만든다.
+3. DWT cycle counter로 실제 latency를 측정하고 UART CSV 로그를 확인한다.
 4. inference를 FreeRTOS periodic task로 전환한다.
 5. background workload 0/20/40/60/80%에서 latency, jitter, deadline miss를 측정한다.
 6. 고정 QoS baseline 이후 inference period 기반 adaptive QoS를 구현한다.

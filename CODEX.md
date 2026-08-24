@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-현재는 **PC compression 완료 후 board bring-up 준비 단계**이다.
+현재는 **PC compression 완료 후 pre-board RTOS preparation 단계**이다.
 
 Student baseline, Teacher/KD, baseline/KD PTQ INT8, ONNX Runtime validation,
 STM32N6 Neural-ART mapping 분석까지 완료했다. baseline과 KD INT8 모두
@@ -16,12 +16,12 @@ STM32N6 Neural-ART mapping 분석까지 완료했다. baseline과 KD INT8 모두
 
 우선순위:
 
-1. STM32CubeIDE/CubeMX board bring-up
-2. baseline PTQ generated Neural-ART runtime 통합
-3. static test-vector inference와 ONNX Runtime output 비교
-4. DWT profiler와 UART CSV logging
-5. FreeRTOS periodic inference 및 interference 실험
-6. fixed QoS baseline 이후 inference-period adaptive QoS
+1. FreeRTOS task/priority/period/deadline contract
+2. metrics record, DWT profiler interface, UART CSV schema
+3. synthetic background workload와 inference-period QoS policy
+4. hardware dependency를 분리한 portable firmware skeleton
+5. 보드 도착 후 baseline PTQ Neural-ART runtime 통합
+6. on-target inference, interference, adaptive QoS 실험
 
 ## Confirmed Baseline
 

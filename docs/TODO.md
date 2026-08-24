@@ -58,7 +58,7 @@ PyTorch Student
 - [x] dataset 결정
 - [x] train/validation split
 - [x] preprocessing pipeline 작성
-- [ ] representative calibration dataset 구성
+- [x] representative calibration dataset 구성
 
 ## 3. Teacher
 
@@ -82,10 +82,10 @@ PyTorch Student
 
 ## 6. Quantization
 
-- [ ] PTQ 실험
+- [x] PTQ 실험
 - [ ] QAT 실험
-- [ ] FP32 vs INT8 accuracy 비교
-- [ ] FP32 vs INT8 size 비교
+- [x] FP32 vs INT8 accuracy 비교
+- [x] FP32 vs INT8 size 비교
 
 ## 7. Export
 
@@ -94,7 +94,7 @@ PyTorch Student
 - [x] ONNX Runtime output validation
 - [x] STM32Cube AI Studio import/analyze
 - [x] unsupported operator 확인
-- [ ] INT8 ONNX의 Neural-ART HW epoch mapping 확인
+- [x] INT8 ONNX의 Neural-ART HW epoch mapping 확인
 
 ## 8. Benchmark Tools
 
@@ -162,4 +162,21 @@ STM32Cube AI compatibility 결과
 - MACC: 55,041,829
 - Epoch mapping: SW 100 / HW(EC) 1
 - 결론: operator 호환성은 확인했으나 FP32 연산은 대부분 software fallback이다.
-- 다음 검증: INT8 모델 생성 후 HW epoch 비율, accuracy, memory 비교
+- INT8 모델과의 HW epoch 및 STM32 memory mapping 비교 완료
+
+## Student PTQ INT8
+
+- Format: ONNX QDQ
+- Calibration: CIFAR-10 train 1,000 samples, MinMax
+- Quantization: INT8 weights / INT8 activations, per-channel
+- FP32 ONNX accuracy: 95.45%
+- INT8 ONNX accuracy: 95.32% (-0.13%p)
+- FP32 ONNX size: 8.51 MiB
+- INT8 ONNX size: 2.54 MiB (-70.14%)
+- Model input/output boundary: FP32 `1x3x96x96` / FP32 `1x10`
+- STM32Cube AI Studio HW epoch 및 memory mapping 확인 완료
+- STM32N6 mapping: SW 0 / HW(EC) 55
+- STM32N6 weights: 2.26 MiB
+- STM32N6 activations: 270 KiB
+- STM32N6 npuRAM5: 60.27%
+- 결론: baseline PTQ 모델은 전체 NPU mapping 성공, QAT 불필요

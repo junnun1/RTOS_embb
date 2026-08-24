@@ -61,6 +61,15 @@ FP32 학습 모델을 calibration dataset을 이용해 INT8로 변환.
 
 학습 과정에서 quantization error를 반영.
 
+현재 PTQ baseline 결과:
+
+| Model | Accuracy | Accuracy Delta | ONNX Size | Size Reduction |
+|---|---:|---:|---:|---:|
+| Student FP32 | 95.45% | - | 8.51 MiB | - |
+| Student PTQ INT8 QDQ | 95.32% | -0.13%p | 2.54 MiB | 70.14% |
+
+PTQ는 CIFAR-10 train split의 deterministic sample 1,000장, MinMax calibration, INT8/INT8 per-channel 설정을 사용했다.
+
 비교:
 
 | Model | Accuracy | Size |
@@ -80,8 +89,9 @@ FP32 학습 모델을 calibration dataset을 이용해 INT8로 변환.
 | Model | Format | Compile | Weights | Activations | MACC | Epoch mapping |
 |---|---|---|---:|---:|---:|---|
 | MobileNetV2 baseline | FP32 ONNX | Passed | 8.47 MiB | 1.58 MiB | 55,041,829 | SW 100 / HW(EC) 1 |
+| MobileNetV2 baseline PTQ | INT8 QDQ ONNX | Passed | 2.26 MiB | 270 KiB | 56,534,389 | SW 0 / HW(EC) 55 |
 
-FP32 결과는 operator compatibility baseline이다. NPU 가속 평가는 INT8 모델과 실제 보드 측정으로 수행한다.
+FP32 결과는 operator compatibility baseline이다. INT8 모델은 compiler 기준 전체 hardware/EC mapping에 성공했다. 실제 NPU latency와 throughput은 보드에서 측정한다.
 
 측정:
 

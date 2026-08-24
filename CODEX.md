@@ -10,16 +10,16 @@
 
 현재는 **보드 도착 전 compression 단계**이다.
 
-Student baseline부터 STM32N6 FP32 compatibility 분석까지 완료했다. 다음 작업은 Teacher/KD와 INT8 quantization이다.
+Student baseline, PTQ INT8 및 STM32N6 Neural-ART mapping 분석까지 완료했다. 다음 작업은 Teacher/KD 최소 비교 실험이다.
 
 우선순위:
 
 1. ResNet18 Teacher baseline
-2. Knowledge Distillation
-3. PTQ INT8
-4. 필요 시 QAT INT8
-5. INT8 ONNX Runtime / STM32N6 Neural-ART validation
-6. FP32 / KD / INT8 benchmark automation
+2. 최소 Knowledge Distillation 비교
+3. KD Student PTQ INT8
+4. KD INT8 ONNX Runtime / STM32N6 Neural-ART validation
+5. FP32 / KD / INT8 benchmark automation
+6. 필요할 때만 QAT INT8
 
 ## Confirmed Baseline
 
@@ -52,6 +52,31 @@ epoch mapping: SW 100 / HW(EC) 1
 ```
 
 FP32 모델은 operator compatibility 확인용 baseline이다. 대부분 software epoch이므로 NPU 배포 성공으로 간주하지 않는다. INT8 모델에서 Neural-ART HW mapping을 다시 확인한다.
+
+PTQ INT8 QDQ 결과:
+
+```text
+calibration: CIFAR-10 train 1,000 samples, MinMax
+weights/activations: INT8/INT8, per-channel
+validation accuracy: 95.32% (-0.13%p vs FP32 ONNX)
+ONNX size: 2.54 MiB (-70.14%)
+QDQ nodes: QuantizeLinear 101 / DequantizeLinear 207
+model input/output: FP32 boundary, static 1x3x96x96 -> 1x10
+```
+
+STM32N6 PTQ INT8 분석 결과:
+
+```text
+weights: 2.26 MiB
+activations: 270 KiB
+epoch mapping: SW 0 / HW(EC) 55
+npuRAM5: 270 KiB / 448 KiB (60.27%)
+octoFlash: 2.263 MiB / 112 MiB (2.02%)
+```
+
+PTQ 손실이 0.13%p에 불과하고 전체 NPU mapping이 성공했으므로 baseline에는 QAT를 적용하지 않는다. KD는 프로젝트 비교 근거를 위한 최소 실험으로 수행하고 개선이 없으면 현재 PTQ 모델을 최종 배포 후보로 유지한다.
+
+작업을 재개할 때는 repository root의 `resume.md`를 먼저 읽고, 그 문서의 reference order를 따른다.
 
 ## Coding Rules
 

@@ -22,8 +22,12 @@ Student baseline과 FP32 배포 경로 검증을 완료했다.
 | STM32N6 FP32 compile | Passed |
 | STM32N6 weights / activations | 8.47 MiB / 1.58 MiB |
 | STM32N6 epoch mapping | SW 100 / HW(EC) 1 |
+| PTQ INT8 QDQ accuracy | 95.32% (-0.13%p) |
+| PTQ INT8 QDQ size | 2.54 MiB (-70.14%) |
+| STM32N6 INT8 epoch mapping | SW 0 / HW(EC) 55 |
+| STM32N6 INT8 weights / activations | 2.26 MiB / 270 KiB |
 
-FP32 모델은 STM32N6에서 변환되지만 대부분 software fallback으로 배치된다. 현재 작업은 ResNet18 Teacher, Knowledge Distillation, INT8 quantization 순서로 진행한다. 상세 분석은 [STM32 AI 분석 결과](docs/STM32_AI_ANALYSIS.md)에 기록한다.
+FP32 모델은 STM32N6에서 변환되지만 대부분 software fallback으로 배치된다. PTQ INT8 모델은 정확도를 거의 유지하면서 모든 epoch이 Neural-ART hardware/EC에 매핑됐다. 현재 작업은 ResNet18 Teacher와 최소 Knowledge Distillation 비교 실험이다. 상세 분석은 [STM32 AI 분석 결과](docs/STM32_AI_ANALYSIS.md), 작업 재개 정보는 [resume.md](resume.md)에 기록한다.
 
 ### Core Keywords
 - STM32N657 / Cortex-M55
@@ -258,6 +262,7 @@ edge-rtos-ai/
 |
 +-- README.md
 +-- CODEX.md
++-- resume.md
 +-- requirements.txt
 +-- configs/
 |   +-- cifar10_mobilenetv2.yaml
@@ -277,6 +282,7 @@ edge-rtos-ai/
 |   +-- prepare_model.py
 |   +-- train_student.py
 |   +-- export_onnx.py
+|   +-- quantize_ptq.py
 |
 +-- benchmarks/
 |
@@ -289,6 +295,7 @@ edge-rtos-ai/
 |
 +-- results/
     +-- tables/
+    +-- reports/
     +-- figures/
     +-- raw_logs/
 ```
@@ -303,6 +310,7 @@ python -m training.train_student \
   --download \
   --smoke-test
 python -m training.export_onnx --config configs/cifar10_mobilenetv2.yaml
+python -m training.quantize_ptq --config configs/cifar10_mobilenetv2.yaml
 ```
 
 `--smoke-test`를 제거하면 config에 지정된 전체 baseline 학습을 실행한다.

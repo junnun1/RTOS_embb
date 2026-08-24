@@ -30,15 +30,14 @@ models/*
 
 # Generated experiment outputs
 results/raw_logs/*
-results/tables/*
 results/figures/*
 !results/raw_logs/.gitkeep
-!results/tables/.gitkeep
 !results/figures/.gitkeep
+
+# Final comparison tables and analysis reports are tracked.
 
 # Build outputs
 build/
 dist/
 firmware/Debug/
 firmware/Release/
-

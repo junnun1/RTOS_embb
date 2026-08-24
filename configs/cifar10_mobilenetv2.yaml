@@ -30,6 +30,15 @@ export:
   absolute_tolerance: 0.0001
   relative_tolerance: 0.001
 
+quantization:
+  method: ptq
+  format: qdq
+  calibration_method: minmax
+  calibration_samples: 1000
+  weight_type: int8
+  activation_type: int8
+  per_channel: true
+
 paths:
   torch_cache: models/.cache/torch
   initial_checkpoint: models/mobilenet_v2_cifar10_init.pth
@@ -37,3 +46,5 @@ paths:
   student_last_checkpoint: models/student_baseline_last.pth
   student_history: results/raw_logs/student_baseline_history.csv
   student_baseline_onnx: models/student_baseline_fp32.onnx
+  student_baseline_int8_onnx: models/student_baseline_int8_qdq.onnx
+  quantization_comparison: results/tables/quantization_comparison.csv

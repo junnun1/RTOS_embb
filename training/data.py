@@ -20,6 +20,53 @@ def _seed_worker(worker_id: int) -> None:
     random.seed(worker_seed)
 
 
+def build_cifar10_transform(input_size: int, *, augment: bool) -> transforms.Compose:
+    """Build the preprocessing used by training, calibration, and evaluation."""
+    operations: list = []
+    if augment:
+        operations.extend(
+            [
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+            ]
+        )
+    operations.extend(
+        [
+            transforms.Resize((input_size, input_size), antialias=True),
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+        ]
+    )
+    return transforms.Compose(operations)
+
+
+def build_cifar10_dataset(
+    config: dict,
+    *,
+    train: bool,
+    augment: bool = False,
+    download: bool = False,
+) -> datasets.CIFAR10:
+    """Create a CIFAR-10 split with the project preprocessing."""
+    dataset_config = config["dataset"]
+
+    class ConfiguredCIFAR10(datasets.CIFAR10):
+        pass
+
+    if dataset_config.get("download_url"):
+        ConfiguredCIFAR10.url = str(dataset_config["download_url"])
+
+    return ConfiguredCIFAR10(
+        root=dataset_config["root"],
+        train=train,
+        transform=build_cifar10_transform(
+            int(dataset_config["input_size"]),
+            augment=augment,
+        ),
+        download=download,
+    )
+
+
 def build_cifar10_loaders(
     config: dict,
     *,
@@ -28,42 +75,15 @@ def build_cifar10_loaders(
     """Create reproducible CIFAR-10 training and validation loaders."""
     dataset_config = config["dataset"]
     training_config = config["training"]
-    input_size = int(dataset_config["input_size"])
-
-    train_transform = transforms.Compose(
-        [
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.Resize((input_size, input_size), antialias=True),
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
-        ]
-    )
-    validation_transform = transforms.Compose(
-        [
-            transforms.Resize((input_size, input_size), antialias=True),
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
-        ]
-    )
-
-    class ConfiguredCIFAR10(datasets.CIFAR10):
-        pass
-
-    if dataset_config.get("download_url"):
-        ConfiguredCIFAR10.url = str(dataset_config["download_url"])
-
-    root = dataset_config["root"]
-    train_dataset = ConfiguredCIFAR10(
-        root=root,
+    train_dataset = build_cifar10_dataset(
+        config,
         train=True,
-        transform=train_transform,
+        augment=True,
         download=download,
     )
-    validation_dataset = ConfiguredCIFAR10(
-        root=root,
+    validation_dataset = build_cifar10_dataset(
+        config,
         train=False,
-        transform=validation_transform,
         download=download,
     )
 

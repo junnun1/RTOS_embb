@@ -1,0 +1,3 @@
+model_name,precision,accuracy,model_size_mb
+student_baseline_fp32,fp32,0.9545,8.506292343139648
+student_baseline_ptq,int8_qdq,0.9532,2.539616584777832

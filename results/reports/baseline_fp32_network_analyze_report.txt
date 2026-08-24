@@ -1,0 +1,344 @@
+>>> C:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe analyze --model C:\Users\SSAFY\Desktop\student_baseline_fp32.onnx --batch-size 10 --mode host --st-neural-art user_profile@C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\profile-neural-art.json --name network --verbosity 1 --c-api st-ai --target stm32n6 --workspace C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_ws --output C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_output
+ST Edge AI Core v4.0.1-20581 7ed50de05
+
+WARNING: _features_features_0_features_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_0_features_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_1_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_1_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_1_conv_conv_1_Conv_output_0 is not quantized
+WARNING: _features_features_2_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+
+WARNING: _features_features_2_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_2_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_2_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_2_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_3_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_3_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_3_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_3_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_3_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_3_Add_output_0 is not quantized
+WARNING: _features_features_4_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_4_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_4_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_4_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_4_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_5_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_5_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_5_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_5_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_5_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_5_Add_output_0 is not quantized
+WARNING: _features_features_6_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_6_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_6_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_6_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_6_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_6_Add_output_0 is not quantized
+WARNING: _features_features_7_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_7_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_7_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_7_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_7_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_8_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_8_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_8_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_8_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_8_conv_conv_2_Conv_output_0 is not quantized
+
+WARNING: _features_features_8_Add_output_0 is not quantized
+WARNING: _features_features_9_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_9_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_9_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_9_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_9_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_9_Add_output_0 is not quantized
+WARNING: _features_features_10_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_10_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_10_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_10_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_10_conv_conv_2_Conv_output_0 is not quantized
+
+WARNING: _features_features_10_Add_output_0 is not quantized
+WARNING: _features_features_11_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_11_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_11_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_11_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_11_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_12_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_12_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_12_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+
+WARNING: _features_features_12_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_12_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_12_Add_output_0 is not quantized
+WARNING: _features_features_13_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_13_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_13_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_13_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_13_conv_conv_2_Conv_output_0 is not quantized
+
+WARNING: _features_features_13_Add_output_0 is not quantized
+WARNING: _features_features_14_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_14_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_14_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_14_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_14_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_15_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_15_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+
+WARNING: _features_features_15_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_15_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+WARNING: _features_features_15_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_15_Add_output_0 is not quantized
+WARNING: _features_features_16_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_16_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_16_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+WARNING: _features_features_16_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+
+WARNING: _features_features_16_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_16_Add_output_0 is not quantized
+WARNING: _features_features_17_conv_conv_0_conv_0_0_Conv_output_0 is not quantized
+WARNING: _features_features_17_conv_conv_0_conv_0_2_Clip_output_0 is not quantized
+WARNING: _features_features_17_conv_conv_1_conv_1_0_Conv_output_0 is not quantized
+
+WARNING: _features_features_17_conv_conv_1_conv_1_2_Clip_output_0 is not quantized
+
+WARNING: _features_features_17_conv_conv_2_Conv_output_0 is not quantized
+WARNING: _features_features_18_features_18_0_Conv_output_0 is not quantized
+
+WARNING: _features_features_18_features_18_2_Clip_output_0 is not quantized
+WARNING: _GlobalAveragePool_output_0 is not quantized
+
+WARNING: _Flatten_output_0 is not quantized
+WARNING: logits is not quantized
+
+ >>>> EXECUTING NEURAL ART COMPILER
+   C:/ST/STEdgeAI/4.0/Utilities/windows/atonn.exe -i "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-1/.ai/st_ai_output/student_baseline_fp32_OE_3_3_1.onnx" --json-quant-file "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-1/.ai/st_ai_output/student_baseline_fp32_OE_3_3_1_Q.json" -g "network.c" --load-mdesc "C:/ST/STEdgeAI/4.0/Utilities/configs/stm32n6.mdesc" --load-mpool "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-1/.ai/memory_pool.mpool" --load-cdesc C:/ST/STEdgeAI/4.0/Utilities/configs/cortex-m55.cdesc --save-mpool-file "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/memory_pool.mpool" --out-dir-prefix "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-1/.ai/st_ai_ws/neural_art__network/" --network-name "network" --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file "c_info.json" --generate-stai
+
+ <<<< DONE EXECUTING NEURAL ART COMPILER
+
+ >>>> EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ <<<< DONE EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ Exec/report summary (analyze)
+ ---------------------------------------------------------------------------------------------------------
+ model file         :   C:\Users\SSAFY\Desktop\student_baseline_fp32.onnx                                 
+ type               :   onnx                                                                              
+ c_name             :   network                                                                           
+ compression        :   lossless                                                                          
+ options            :   allocate-inputs, allocate-outputs, use-lite-runtime, use-st-ai                    
+ optimization       :   balanced                                                                          
+ target/series      :   stm32n6npu                                                                        
+ workspace dir      :   C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_ws       
+ output dir         :   C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_output   
+ model_fmt          :   float                                                                             
+ model_name         :   student_baseline_fp32                                                             
+ model_hash         :   0xa6b207523232522f246fd3f31876091a                                                
+ params #           :   2,219,626 items (8.47 MiB)                                                        
+ ---------------------------------------------------------------------------------------------------------
+ input 1/1          :   'Input_0_out_0', f32(1x3x96x96), 108.00 KBytes, activations                       
+ output 1/1         :   'Gemm_100_out_0', f32(1x10), 40 Bytes, activations                                
+ macc               :   55,041,829                                                                        
+ weights (ro)       :   8,878,504 B (8.47 MiB) (1 segment)                                                
+ activations (rw)   :   1,658,880 B (1.58 MiB) (3 segments) *                                             
+ ram (total)        :   1,658,880 B (1.58 MiB) = 1,658,880 + 0 + 0                                        
+ ---------------------------------------------------------------------------------------------------------
+ (*) 'input'/'output' buffers are allocated in the activations buffer
+
+Computing AI RT data/code size (target=stm32n6npu)..
+
+Compilation details
+   ---------------------------------------------------------------------------------
+
+Compiler version: 1.1.3-275
+Compiler arguments:  -i C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_output\student_baseline_fp32_OE_3_3_1.onnx --json-quant-file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_output\student_baseline_fp32_OE_3_3_1_Q.json -g network.c --load-mdesc C:\ST\STEdgeAI\4.0\Utilities\configs\stm32n6.mdesc --load-mpool C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\memory_pool.mpool --load-cdesc C:\ST\STEdgeAI\4.0\Utilities\configs\cortex-m55.cdesc --save-mpool-file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_ws\neural_art__network\memory_pool.mpool --out-dir-prefix C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_ws\neural_art__network/ --network-name network --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file c_info.json --generate-stai
+====================================================================================
+Memory usage information  (input/output buffers are included in activations)
+
+   ---------------------------------------------------------------------------------
+	flexMEM    [0x34000000 - 0x34000000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM1    [0x34064000 - 0x34064000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM2    [0x34100000 - 0x34200000]:    864.000 kB /      1.000 MB  ( 84.38 % used) -- weights:          0  B (  0.00 % used)  activations:    864.000 kB ( 84.38 % used)
+	npuRAM3    [0x34200000 - 0x34270000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM4    [0x34270000 - 0x342E0000]:    324.000 kB /    448.000 kB  ( 72.32 % used) -- weights:          0  B (  0.00 % used)  activations:    324.000 kB ( 72.32 % used)
+	npuRAM5    [0x342E0000 - 0x34350000]:    432.000 kB /    448.000 kB  ( 96.43 % used) -- weights:          0  B (  0.00 % used)  activations:    432.000 kB ( 96.43 % used)
+
+	npuRAM6    [0x34350000 - 0x343C0000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	octoFlash  [0x71000000 - 0x78000000]:      8.467 MB /    112.000 MB  (  7.56 % used) -- weights:      8.467 MB (  7.56 % used)  activations:          0  B (  0.00 % used)
+	hyperRAM   [0x90000000 - 0x92000000]:          0  B /     32.000 MB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+Total:                                            10.049 MB                                  -- weights:      8.467 MB                  activations:      1.582 MB
+
+====================================================================================
+Used memory ranges
+   ---------------------------------------------------------------------------------
+	cpuRAM2    [0x34100000 - 0x34200000]: 0x34100000-0x341D8000
+	npuRAM4    [0x34270000 - 0x342E0000]: 0x34270000-0x342C1000
+	npuRAM5    [0x342E0000 - 0x34350000]: 0x342E0000-0x3434C000
+
+	octoFlash  [0x71000000 - 0x78000000]: 0x71000000-0x718779B0
+====================================================================================
+Epochs details
+   ---------------------------------------------------------------------------------
+
+Total number of epochs                               101
+>> pure software (SW) epochs                         100
+>> hybrid epochs (using both software and hardware)    0
+>> pure hardware (HW or EC) epochs                     1  (implemented in 2 epoch controller blobs/meta epochs)
+
++----------------------+------+--------------------+
+| epoch ID             | Type |      Details       |
++----------------------+------+--------------------+
+| epochs    1 -> 1     |  EC  |                    |
+| epoch_2              |  SW  |    Conv(float)     |
+| epoch_3              |  SW  |    Clip(float)     |
+| epoch_4              |  SW  |    Conv(float)     |
+| epoch_5              |  SW  |    Clip(float)     |
+
+| epoch_6              |  SW  |    Conv(float)     |
+| epoch_7              |  SW  |    Conv(float)     |
+| epoch_8              |  SW  |    Clip(float)     |
+| epoch_9              |  SW  |    Conv(float)     |
+| epoch_10             |  SW  |    Clip(float)     |
+| epoch_11             |  SW  |    Conv(float)     |
+
+| epoch_12             |  SW  |    Conv(float)     |
+| epoch_13             |  SW  |    Clip(float)     |
+| epoch_14             |  SW  |    Conv(float)     |
+| epoch_15             |  SW  |    Clip(float)     |
+| epoch_16             |  SW  |    Conv(float)     |
+| epoch_17             |  SW  |     Add(float)     |
+| epoch_18             |  SW  |    Conv(float)     |
+| epoch_19             |  SW  |    Clip(float)     |
+| epoch_20             |  SW  |    Conv(float)     |
+| epoch_21             |  SW  |    Clip(float)     |
+| epoch_22             |  SW  |    Conv(float)     |
+
+| epoch_23             |  SW  |    Conv(float)     |
+| epoch_24             |  SW  |    Clip(float)     |
+| epoch_25             |  SW  |    Conv(float)     |
+| epoch_26             |  SW  |    Clip(float)     |
+| epoch_27             |  SW  |    Conv(float)     |
+| epoch_28             |  SW  |     Add(float)     |
+| epoch_29             |  SW  |    Conv(float)     |
+| epoch_30             |  SW  |    Clip(float)     |
+| epoch_31             |  SW  |    Conv(float)     |
+| epoch_32             |  SW  |    Clip(float)     |
+| epoch_33             |  SW  |    Conv(float)     |
+
+| epoch_34             |  SW  |     Add(float)     |
+| epoch_35             |  SW  |    Conv(float)     |
+| epoch_36             |  SW  |    Clip(float)     |
+| epoch_37             |  SW  |    Conv(float)     |
+| epoch_38             |  SW  |    Clip(float)     |
+| epoch_39             |  SW  |    Conv(float)     |
+| epoch_40             |  SW  |    Conv(float)     |
+| epoch_41             |  SW  |    Clip(float)     |
+| epoch_42             |  SW  |    Conv(float)     |
+| epoch_43             |  SW  |    Clip(float)     |
+| epoch_44             |  SW  |    Conv(float)     |
+
+| epoch_45             |  SW  |     Add(float)     |
+| epoch_46             |  SW  |    Conv(float)     |
+| epoch_47             |  SW  |    Clip(float)     |
+| epoch_48             |  SW  |    Conv(float)     |
+| epoch_49             |  SW  |    Clip(float)     |
+| epoch_50             |  SW  |    Conv(float)     |
+| epoch_51             |  SW  |     Add(float)     |
+| epoch_52             |  SW  |    Conv(float)     |
+| epoch_53             |  SW  |    Clip(float)     |
+| epoch_54             |  SW  |    Conv(float)     |
+| epoch_55             |  SW  |    Clip(float)     |
+
+| epoch_56             |  SW  |    Conv(float)     |
+| epoch_57             |  SW  |     Add(float)     |
+| epoch_58             |  SW  |    Conv(float)     |
+| epoch_59             |  SW  |    Clip(float)     |
+| epoch_60             |  SW  |    Conv(float)     |
+| epoch_61             |  SW  |    Clip(float)     |
+| epoch_62             |  SW  |    Conv(float)     |
+| epoch_63             |  SW  |    Conv(float)     |
+| epoch_64             |  SW  |    Clip(float)     |
+| epoch_65             |  SW  |    Conv(float)     |
+| epoch_66             |  SW  |    Clip(float)     |
+| epoch_67             |  SW  |    Conv(float)     |
+| epoch_68             |  SW  |     Add(float)     |
+
+| epoch_69             |  SW  |    Conv(float)     |
+| epoch_70             |  SW  |    Clip(float)     |
+| epoch_71             |  SW  |    Conv(float)     |
+| epoch_72             |  SW  |    Clip(float)     |
+| epoch_73             |  SW  |    Conv(float)     |
+| epoch_74             |  SW  |     Add(float)     |
+| epoch_75             |  SW  |    Conv(float)     |
+| epoch_76             |  SW  |    Clip(float)     |
+| epoch_77             |  SW  |    Conv(float)     |
+| epoch_78             |  SW  |    Clip(float)     |
+| epoch_79             |  SW  |    Conv(float)     |
+| epoch_80             |  SW  |    Conv(float)     |
+
+| epoch_81             |  SW  |    Clip(float)     |
+| epoch_82             |  SW  |    Conv(float)     |
+| epoch_83             |  SW  |    Clip(float)     |
+| epoch_84             |  SW  |    Conv(float)     |
+| epoch_85             |  SW  |     Add(float)     |
+| epoch_86             |  SW  |    Conv(float)     |
+| epoch_87             |  SW  |    Clip(float)     |
+| epoch_88             |  SW  |    Conv(float)     |
+| epoch_89             |  SW  |    Clip(float)     |
+| epoch_90             |  SW  |    Conv(float)     |
+
+| epoch_91             |  SW  |     Add(float)     |
+| epoch_92             |  SW  |    Conv(float)     |
+| epoch_93             |  SW  |    Clip(float)     |
+| epoch_94             |  SW  |    Conv(float)     |
+| epoch_95             |  SW  |    Clip(float)     |
+| epoch_96             |  SW  |    Conv(float)     |
+| epoch_97             |  SW  |    Conv(float)     |
+| epoch_98             |  SW  |    Clip(float)     |
+| epoch_99             |  SW  | AveragePool(float) |
+| epoch_100            |  SW  |    Conv(float)     |
+| <no executed epochs> |  EC  |                    |
+
+| epoch_102            |  SW  |     Add(float)     |
++----------------------+------+--------------------+
+====================================================================================
+ Requested memory size by section - "stm32n6npu" target
+ ------------------------------- -------- ------------ ------ -----------
+ module                              text       rodata   data         bss
+ ------------------------------- -------- ------------ ------ -----------
+ network_atonbuf.xSPI2.o                0    8,878,504      0           0
+ network.o                         14,500       11,295      0           0
+ NetworkRuntime1201_CM55_GCC.a     13,108            0      0           0
+ EC Blobs                               2          448      0           0
+
+ stai_network.o                         0            0      0           0
+ lib (toolchain)*                  12,296        2,262      0           0
+ ll atonn runtime                   6,752        8,138      0          13
+ ------------------------------- -------- ------------ ------ -----------
+ RT total**                        46,658    8,900,647      0          13
+ ------------------------------- -------- ------------ ------ -----------
+ weights                                0    8,878,504      0           0
+ activations                            0            0      0   1,658,880
+ io                                     0            0      0           0
+ ------------------------------- -------- ------------ ------ -----------
+ TOTAL                             46,658   17,779,151      0   1,658,893
+
+ ------------------------------- -------- ------------ ------ -----------
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  Summary - "stm32n6npu" target
+  ---------------------------------------------------
+               FLASH (ro)      %*    RAM (rw)      %
+  ---------------------------------------------------
+  RT total      8,947,305   50.2%          13   0.0%
+  ---------------------------------------------------
+  TOTAL        17,825,809           1,658,893
+
+  ---------------------------------------------------
+  *  rt/total
+Creating txt report file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-1\.ai\st_ai_output\network_analyze_report.txt
+
+elapsed time (ANALYZE): 15.067s
+

@@ -6,7 +6,7 @@
 
 STM32N657 + FreeRTOS 환경에서 경량 CNN을 실행하고 Knowledge Distillation, INT8 quantization, Neural-ART NPU 가속, 실시간 task interference 및 adaptive QoS를 단계적으로 검증한다.
 
-현재 단계는 보드 도착 전 PC-side compression이다.
+현재 단계는 보드 도착 전 PC-side compression이다. Teacher/KD 최소 비교와 KD PTQ까지 완료했다.
 
 ## 2. Confirmed Configuration
 
@@ -39,6 +39,10 @@ Main config: `configs/cifar10_mobilenetv2.yaml`
 - Full CIFAR-10 validation of FP32 and INT8 ONNX
 - STM32Cube AI Studio INT8 import/analyze
 - INT8 Neural-ART full hardware/EC mapping confirmation
+- ResNet18 Teacher 60-epoch training
+- Minimal KD training (`temperature=4`, `alpha=0.5`)
+- KD FP32 ONNX export/runtime validation and static PTQ
+- Four-model PC benchmark automation
 
 ## 4. Results
 
@@ -64,6 +68,17 @@ Training best validation accuracy was 95.46% at epoch 28. PyTorch and FP32 ONNX 
 
 Interpretation: FP32 is compatible but mostly software fallback. PTQ INT8 preserves accuracy and maps the complete network to Neural-ART hardware/EC.
 
+### Teacher and KD
+
+| Model | Accuracy | ONNX Size |
+|---|---:|---:|
+| Teacher ResNet18 | 95.03% | - |
+| Student KD FP32 ONNX | 95.25% | 8.51 MiB |
+| Student KD PTQ INT8 QDQ | 95.21% | 2.54 MiB |
+
+Teacher accuracy was 0.42%p below the Student baseline. KD was 0.20%p below the
+baseline, while KD PTQ loss was only 0.04%p. Keep baseline PTQ as the deployment candidate.
+
 ## 5. Local Artifacts
 
 These files exist locally and are ignored by Git:
@@ -74,7 +89,15 @@ models/student_baseline_best.pth
 models/student_baseline_last.pth
 models/student_baseline_fp32.onnx
 models/student_baseline_int8_qdq.onnx
+models/teacher_resnet18_best.pth
+models/teacher_resnet18_last.pth
+models/student_kd_best.pth
+models/student_kd_last.pth
+models/student_kd_fp32.onnx
+models/student_kd_int8_qdq.onnx
 results/raw_logs/student_baseline_history.csv
+results/raw_logs/teacher_resnet18_history.csv
+results/raw_logs/student_kd_history.csv
 training/datasets/cifar-10-batches-py/
 ```
 
@@ -82,13 +105,16 @@ This final comparison table is tracked by Git:
 
 ```text
 results/tables/quantization_comparison.csv
+results/tables/kd_quantization_comparison.csv
+results/tables/model_comparison.csv
 ```
 
-STM32Cube AI Studio raw reports currently remain in the Windows AI Studio workspace. Copy them into the tracked directory with descriptive names:
+STM32Cube AI Studio raw reports are tracked with descriptive names:
 
 ```text
-results/reports/fp32_network_analyze_report.txt
-results/reports/int8_network_analyze_report.txt
+results/reports/baseline_fp32_network_analyze_report.txt
+results/reports/baseline_int8_network_analyze_report.txt
+results/reports/kd_int8_network_analyze_report.txt
 ```
 
 Do not commit `.pth`, `.onnx`, downloaded datasets, `.venv`, or raw epoch logs unless the repository storage policy is intentionally changed.
@@ -117,6 +143,23 @@ python -m training.export_onnx \
 
 python -m training.quantize_ptq \
   --config configs/cifar10_mobilenetv2.yaml
+
+python -m training.train_teacher --config configs/cifar10_mobilenetv2.yaml
+python -m training.train_kd --config configs/cifar10_mobilenetv2.yaml
+
+python -m training.export_onnx \
+  --config configs/cifar10_mobilenetv2.yaml \
+  --checkpoint models/student_kd_best.pth \
+  --output models/student_kd_fp32.onnx
+
+python -m training.quantize_ptq \
+  --config configs/cifar10_mobilenetv2.yaml \
+  --input models/student_kd_fp32.onnx \
+  --output models/student_kd_int8_qdq.onnx \
+  --comparison-output results/tables/kd_quantization_comparison.csv \
+  --model-name student_kd
+
+python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 ```
 
 The PTQ command uses 1,000 deterministic CIFAR-10 training samples for MinMax calibration and evaluates both FP32 and INT8 models on all 10,000 validation images.
@@ -125,16 +168,10 @@ The PTQ command uses 1,000 deterministic CIFAR-10 training samples for MinMax ca
 
 Recommended order:
 
-1. Copy the two STM32 `network_analyze_report.txt` files into `results/reports/`.
-2. Implement and train the ResNet18 Teacher with the same input and preprocessing.
-3. Confirm that Teacher accuracy is higher than the 95.45% Student baseline.
-4. Implement one minimal KD experiment using initial `temperature=4`, `alpha=0.5`.
-5. Compare Student baseline FP32, Student KD FP32, baseline PTQ INT8 and KD PTQ INT8.
-6. Quantize the KD Student with the same QDQ PTQ pipeline.
-7. Run STM32N6 analyze for the KD INT8 model.
-8. Keep the current baseline PTQ model as the final deployment candidate if KD gives less than 0.2%p improvement.
-9. Implement PC latency/model comparison automation.
-10. After board arrival, perform on-target accuracy, latency, throughput and memory validation before RTOS integration.
+1. Keep baseline PTQ as the deployment candidate; the minimal KD experiment did not improve accuracy.
+2. Revisit Teacher tuning/KD only if another accuracy experiment is required.
+3. Prepare the STM32N657 firmware integration skeleton and inference interface.
+4. After board arrival, perform on-target accuracy, latency, throughput and memory validation before RTOS integration.
 
 QAT is not currently required because baseline PTQ accuracy loss is only 0.13%p. Reconsider QAT only if KD PTQ has a materially larger loss or a future model fails quantization.
 
@@ -147,15 +184,16 @@ When resuming, read these files in order:
 3. `docs/TODO.md` — completed and pending checklist.
 4. `configs/cifar10_mobilenetv2.yaml` — authoritative model/training/export/PTQ settings.
 5. `docs/STM32_AI_ANALYSIS.md` — detailed FP32 vs INT8 STM32N6 analysis.
-6. `docs/EXPERIMENT_PLAN.md` — required experiment comparison tables.
-7. `training/models.py` — model factory and classifier replacement.
-8. `training/data.py` — preprocessing and reproducible data loaders.
-9. `training/engine.py` — shared training/evaluation loops.
-10. `training/train_student.py` — baseline training and checkpoint schema.
-11. `training/export_onnx.py` — FP32 ONNX export and output validation.
-12. `training/quantize_ptq.py` — QDQ PTQ calibration and accuracy comparison.
-13. `docs/ARCHITECTURE.md` — future FreeRTOS/firmware architecture.
-14. `docs/PROJECT_PLAN.md` — full project milestones and risk policy.
+6. `docs/KD_STM32_AI_ANALYSIS.md` — KD INT8 STM32N6 analysis and baseline comparison.
+7. `docs/EXPERIMENT_PLAN.md` — required experiment comparison tables.
+8. `training/models.py` — model factory and classifier replacement.
+9. `training/data.py` — preprocessing and reproducible data loaders.
+10. `training/engine.py` — shared training/evaluation loops.
+11. `training/train_student.py` — baseline training and checkpoint schema.
+12. `training/export_onnx.py` — FP32 ONNX export and output validation.
+13. `training/quantize_ptq.py` — QDQ PTQ calibration and accuracy comparison.
+14. `docs/ARCHITECTURE.md` — future FreeRTOS/firmware architecture.
+15. `docs/PROJECT_PLAN.md` — full project milestones and risk policy.
 
 Do not infer results from filenames alone. Use `results/tables/quantization_comparison.csv` for PC quantization results and `docs/STM32_AI_ANALYSIS.md` for the manually measured STM32 analysis.
 

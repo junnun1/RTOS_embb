@@ -47,7 +47,11 @@ L = alpha * CE(student, label)
 | Model | Accuracy |
 |---|---:|
 | Student baseline | 95.46% |
-| Student + KD | TBD |
+| Teacher ResNet18 (60 epochs) | 95.03% |
+| Student + KD (T=4, alpha=0.5) | 95.25% |
+
+Teacher가 Student baseline보다 0.42%p 낮았으며, 최소 KD 실험도 baseline보다
+0.20%p 낮았다. 따라서 현재 설정에서는 KD 정확도 개선 효과가 없다.
 
 ---
 
@@ -74,9 +78,12 @@ PTQ는 CIFAR-10 train split의 deterministic sample 1,000장, MinMax calibration
 
 | Model | Accuracy | Size |
 |---|---:|---:|
-| KD Student FP32 | TBD | TBD |
-| KD Student PTQ INT8 | TBD | TBD |
+| KD Student FP32 | 95.25% | 8.51 MiB |
+| KD Student PTQ INT8 | 95.21% | 2.54 MiB |
 | KD Student QAT INT8 | TBD | TBD |
+
+KD PTQ의 정확도 손실은 0.04%p이며 크기는 70.14% 감소했다. KD가 baseline을
+개선하지 못했으므로 현재 baseline PTQ INT8 모델을 배포 후보로 유지한다.
 
 ---
 

@@ -16,6 +16,11 @@ model:
   width_mult: 1.0
   dropout: 0.2
 
+teacher_model:
+  name: resnet18
+  pretrained: true
+  weights: IMAGENET1K_V1
+
 training:
   epochs: 30
   batch_size: 128
@@ -23,6 +28,20 @@ training:
   weight_decay: 0.0001
   label_smoothing: 0.1
   mixed_precision: true
+
+teacher_training:
+  epochs: 60
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+
+distillation:
+  epochs: 30
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+  temperature: 4.0
+  alpha: 0.5
 
 export:
   opset_version: 17
@@ -47,4 +66,13 @@ paths:
   student_history: results/raw_logs/student_baseline_history.csv
   student_baseline_onnx: models/student_baseline_fp32.onnx
   student_baseline_int8_onnx: models/student_baseline_int8_qdq.onnx
+  teacher_best_checkpoint: models/teacher_resnet18_best.pth
+  teacher_last_checkpoint: models/teacher_resnet18_last.pth
+  teacher_history: results/raw_logs/teacher_resnet18_history.csv
+  student_kd_best_checkpoint: models/student_kd_best.pth
+  student_kd_last_checkpoint: models/student_kd_last.pth
+  student_kd_history: results/raw_logs/student_kd_history.csv
+  student_kd_onnx: models/student_kd_fp32.onnx
+  student_kd_int8_onnx: models/student_kd_int8_qdq.onnx
   quantization_comparison: results/tables/quantization_comparison.csv
+  model_comparison: results/tables/model_comparison.csv

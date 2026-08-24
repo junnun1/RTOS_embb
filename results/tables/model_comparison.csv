@@ -1,0 +1,5 @@
+model_name,precision,accuracy,parameter_count,model_size_mb,pc_latency_ms,notes
+student_baseline_fp32,fp32,0.9545,2236682,8.506292343139648,1.6172673502660473,ONNX Runtime CPUExecutionProvider; batch=1
+student_kd_fp32,fp32,0.9525,2236682,8.506292343139648,0.8339511700614821,ONNX Runtime CPUExecutionProvider; batch=1
+student_baseline_ptq,int8_qdq,0.9532,2236682,2.539616584777832,2.151704739735578,ONNX Runtime CPUExecutionProvider; batch=1
+student_kd_ptq,int8_qdq,0.9521,2236682,2.539616584777832,2.175398170329572,ONNX Runtime CPUExecutionProvider; batch=1

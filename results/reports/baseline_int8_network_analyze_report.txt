@@ -1,0 +1,114 @@
+>>> C:\ST\STEdgeAI\4.0\Utilities\windows\stedgeai.exe analyze --model C:\Users\SSAFY\Desktop\student_baseline_int8_qdq.onnx --batch-size 10 --mode host --st-neural-art user_profile@C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\profile-neural-art.json --name network --verbosity 1 --c-api st-ai --target stm32n6 --workspace C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_ws --output C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_output
+ST Edge AI Core v4.0.1-20581 7ed50de05
+
+ >>>> EXECUTING NEURAL ART COMPILER
+   C:/ST/STEdgeAI/4.0/Utilities/windows/atonn.exe -i "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-2/.ai/st_ai_output/student_baseline_int8_qdq_OE_3_3_1.onnx" --json-quant-file "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-2/.ai/st_ai_output/student_baseline_int8_qdq_OE_3_3_1_Q.json" -g "network.c" --load-mdesc "C:/ST/STEdgeAI/4.0/Utilities/configs/stm32n6.mdesc" --load-mpool "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-2/.ai/memory_pool.mpool" --load-cdesc C:/ST/STEdgeAI/4.0/Utilities/configs/cortex-m55.cdesc --save-mpool-file "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-2/.ai/st_ai_ws/neural_art__network/memory_pool.mpool" --out-dir-prefix "C:/Users/SSAFY/.stm32cubeaistudio/workspace/asdf/.ai/run/run-2/.ai/st_ai_ws/neural_art__network/" --network-name "network" --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file "c_info.json" --generate-stai
+
+ <<<< DONE EXECUTING NEURAL ART COMPILER
+
+ >>>> EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ <<<< DONE EXECUTING EPOCH_CONTROLLER POST_PROCESSING
+
+ Exec/report summary (analyze)
+ ------------------------------------------------------------------------------------------------------------------
+ model file         :   C:\Users\SSAFY\Desktop\student_baseline_int8_qdq.onnx                                      
+ type               :   onnx                                                                                       
+ c_name             :   network                                                                                    
+ compression        :   lossless                                                                                   
+ options            :   allocate-inputs, allocate-outputs, use-lite-runtime, use-st-ai                             
+ optimization       :   balanced                                                                                   
+ target/series      :   stm32n6npu                                                                                 
+ workspace dir      :   C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_ws                
+ output dir         :   C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_output            
+ model_fmt          :   float                                                                                      
+ model_name         :   student_baseline_int8_qdq                                                                  
+ model_hash         :   0xd42ea2d6c461af89beecd868dea738b8                                                         
+ params #           :   2,219,626 items (8.47 MiB)                                                                 
+ ------------------------------------------------------------------------------------------------------------------
+ input 1/1          :   'Input_0_out_0', int8(1x3x96x96), 27.00 KBytes, QLinear(0.016744005,0,int8), activations   
+ output 1/1         :   'Quantize_245_out_0', int8(1x10), 10 Bytes, QLinear(0.029990954,0,int8), activations       
+ macc               :   56,534,389                                                                                 
+ weights (ro)       :   2,372,720 B (2.26 MiB) (1 segment) / -6,505,784(-73.3%) vs float model                     
+ activations (rw)   :   276,480 B (270.00 KiB) (1 segment) *                                                       
+ ram (total)        :   276,480 B (270.00 KiB) = 276,480 + 0 + 0                                                   
+ ------------------------------------------------------------------------------------------------------------------
+ (*) 'input'/'output' buffers are allocated in the activations buffer
+
+Computing AI RT data/code size (target=stm32n6npu)..
+
+Compilation details
+   ---------------------------------------------------------------------------------
+Compiler version: 1.1.3-275
+Compiler arguments:  -i C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_output\student_baseline_int8_qdq_OE_3_3_1.onnx --json-quant-file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_output\student_baseline_int8_qdq_OE_3_3_1_Q.json -g network.c --load-mdesc C:\ST\STEdgeAI\4.0\Utilities\configs\stm32n6.mdesc --load-mpool C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\memory_pool.mpool --load-cdesc C:\ST\STEdgeAI\4.0\Utilities\configs\cortex-m55.cdesc --save-mpool-file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_ws\neural_art__network\memory_pool.mpool --out-dir-prefix C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_ws\neural_art__network/ --network-name network --native-float --cache-maintenance --Ocache-opt --enable-virtual-mem-pools --Os --Oauto-sched --enable-epoch-controller --output-info-file c_info.json --generate-stai
+====================================================================================
+Memory usage information  (input/output buffers are included in activations)
+   ---------------------------------------------------------------------------------
+	flexMEM    [0x34000000 - 0x34000000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	cpuRAM1    [0x34064000 - 0x34064000]:          0  B /          0  B  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+
+	cpuRAM2    [0x34100000 - 0x34200000]:          0  B /      1.000 MB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM3    [0x34200000 - 0x34270000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM4    [0x34270000 - 0x342E0000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	npuRAM5    [0x342E0000 - 0x34350000]:    270.000 kB /    448.000 kB  ( 60.27 % used) -- weights:          0  B (  0.00 % used)  activations:    270.000 kB ( 60.27 % used)
+	npuRAM6    [0x34350000 - 0x343C0000]:          0  B /    448.000 kB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+	octoFlash  [0x71000000 - 0x78000000]:      2.263 MB /    112.000 MB  (  2.02 % used) -- weights:      2.263 MB (  2.02 % used)  activations:          0  B (  0.00 % used)
+	hyperRAM   [0x90000000 - 0x92000000]:          0  B /     32.000 MB  (  0.00 % used) -- weights:          0  B (  0.00 % used)  activations:          0  B (  0.00 % used)
+Total:                                             2.526 MB                                  -- weights:      2.263 MB                  activations:    270.000 kB
+====================================================================================
+Used memory ranges
+   ---------------------------------------------------------------------------------
+	npuRAM5    [0x342E0000 - 0x34350000]: 0x342E0000-0x34323800
+	octoFlash  [0x71000000 - 0x78000000]: 0x71000000-0x71243470
+====================================================================================
+Epochs details
+   ---------------------------------------------------------------------------------
+Total number of epochs                               55
+>> pure software (SW) epochs                          0
+>> hybrid epochs (using both software and hardware)   0
+>> pure hardware (HW or EC) epochs                   55  (implemented in 1 epoch controller blobs/meta epochs)
+
++-------------------+------+---------+
+| epoch ID          | Type | Details |
++-------------------+------+---------+
+| epochs    1 -> 55 |  EC  |         |
++-------------------+------+---------+
+====================================================================================
+ Requested memory size by section - "stm32n6npu" target
+ ------------------------------- ------- ----------- ------ ---------
+ module                             text      rodata   data       bss
+ ------------------------------- ------- ----------- ------ ---------
+ network_atonbuf.xSPI2.o               0   2,372,720      0         0
+ EC Blobs                              2     116,224      0   115,584
+ network.o                           124     110,140      0         0
+ stai_network.o                        0           0      0         0
+ NetworkRuntime1201_CM55_GCC.a         0           0      0         0
+ lib (toolchain)*                      0           0      0         0
+ ll atonn runtime                  3,096       2,324      0        13
+ ------------------------------- ------- ----------- ------ ---------
+
+ RT total**                        3,222   2,601,408      0   115,597
+ ------------------------------- ------- ----------- ------ ---------
+ weights                               0   2,372,720      0         0
+ activations                           0           0      0   276,480
+ io                                    0           0      0         0
+ ------------------------------- ------- ----------- ------ ---------
+ TOTAL                             3,222   4,974,128      0   392,077
+ ------------------------------- ------- ----------- ------ ---------
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  Summary - "stm32n6npu" target
+
+  ---------------------------------------------------
+               FLASH (ro)      %*   RAM (rw)       %
+  ---------------------------------------------------
+  RT total      2,604,630   52.3%    115,597   29.5%
+  ---------------------------------------------------
+  TOTAL         4,977,350            392,077
+  ---------------------------------------------------
+  *  rt/total
+
+Creating txt report file C:\Users\SSAFY\.stm32cubeaistudio\workspace\asdf\.ai\run\run-2\.ai\st_ai_output\network_analyze_report.txt
+
+elapsed time (ANALYZE): 12.777s
+

@@ -1,0 +1,3 @@
+model_name,precision,accuracy,model_size_mb
+student_kd_fp32,fp32,0.9525,8.506292343139648
+student_kd_ptq,int8_qdq,0.9521,2.539616584777832

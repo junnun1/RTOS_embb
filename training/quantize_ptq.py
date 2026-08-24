@@ -55,6 +55,15 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("configs/cifar10_mobilenetv2.yaml"),
     )
+    parser.add_argument("--input", type=Path, default=None, help="Override FP32 ONNX input.")
+    parser.add_argument("--output", type=Path, default=None, help="Override INT8 QDQ output.")
+    parser.add_argument(
+        "--comparison-output",
+        type=Path,
+        default=None,
+        help="Override comparison CSV output.",
+    )
+    parser.add_argument("--model-name", default="student_baseline")
     return parser.parse_args()
 
 
@@ -83,16 +92,17 @@ def write_comparison(
     int8_path: Path,
     fp32_accuracy: float,
     int8_accuracy: float,
+    model_name: str = "student_baseline",
 ) -> None:
     rows = [
         {
-            "model_name": "student_baseline_fp32",
+            "model_name": f"{model_name}_fp32",
             "precision": "fp32",
             "accuracy": fp32_accuracy,
             "model_size_mb": fp32_path.stat().st_size / (1024 * 1024),
         },
         {
-            "model_name": "student_baseline_ptq",
+            "model_name": f"{model_name}_ptq",
             "precision": "int8_qdq",
             "accuracy": int8_accuracy,
             "model_size_mb": int8_path.stat().st_size / (1024 * 1024),
@@ -111,9 +121,9 @@ def main() -> None:
         config = yaml.safe_load(config_file)
 
     quantization_config = config["quantization"]
-    fp32_path = Path(config["paths"]["student_baseline_onnx"])
-    int8_path = Path(config["paths"]["student_baseline_int8_onnx"])
-    comparison_path = Path(config["paths"]["quantization_comparison"])
+    fp32_path = args.input or Path(config["paths"]["student_baseline_onnx"])
+    int8_path = args.output or Path(config["paths"]["student_baseline_int8_onnx"])
+    comparison_path = args.comparison_output or Path(config["paths"]["quantization_comparison"])
     if not fp32_path.is_file():
         raise FileNotFoundError(f"FP32 ONNX model not found: {fp32_path}")
 
@@ -160,6 +170,7 @@ def main() -> None:
         int8_path=int8_path,
         fp32_accuracy=fp32_accuracy,
         int8_accuracy=int8_accuracy,
+        model_name=args.model_name,
     )
 
     fp32_size = fp32_path.stat().st_size / (1024 * 1024)

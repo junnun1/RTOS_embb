@@ -25,8 +25,8 @@
 
 - [x] Teacher 모델 선정
 - [x] Student 학습 코드 skeleton 작성
-- [ ] Knowledge Distillation loss skeleton 작성
-- [ ] accuracy / model size benchmark script 작성
+- [x] Knowledge Distillation loss skeleton 작성
+- [x] accuracy / model size benchmark script 작성
 - [x] `requirements.txt` 생성
 
 ### 오늘 종료 조건
@@ -62,9 +62,9 @@ PyTorch Student
 
 ## 3. Teacher
 
-- [ ] teacher baseline 확보
-- [ ] checkpoint 저장
-- [ ] validation script 작성
+- [x] teacher baseline 확보
+- [x] checkpoint 저장
+- [x] validation script 작성
 
 ## 4. Student
 
@@ -75,10 +75,10 @@ PyTorch Student
 
 ## 5. Distillation
 
-- [ ] KD loss 구현
-- [ ] temperature 설정
-- [ ] alpha 설정
-- [ ] baseline vs KD 비교
+- [x] KD loss 구현
+- [x] temperature 설정
+- [x] alpha 설정
+- [x] baseline vs KD 비교
 
 ## 6. Quantization
 
@@ -98,9 +98,9 @@ PyTorch Student
 
 ## 8. Benchmark Tools
 
-- [ ] accuracy benchmark
-- [ ] model size benchmark
-- [ ] PC latency benchmark
+- [x] accuracy benchmark
+- [x] model size benchmark
+- [x] PC latency benchmark
 - [x] CSV logger
 - [ ] plot script
 

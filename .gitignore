@@ -1,0 +1,44 @@
+# Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+
+# Local configuration and runtime artifacts
+.env
+:memory:.ses
+*.log
+
+# Downloaded datasets
+training/datasets/*
+!training/datasets/.gitkeep
+
+# Generated model artifacts
+models/*
+!models/.gitkeep
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# Generated experiment outputs
+results/raw_logs/*
+results/tables/*
+results/figures/*
+!results/raw_logs/.gitkeep
+!results/tables/.gitkeep
+!results/figures/.gitkeep
+
+# Build outputs
+build/
+dist/
+firmware/Debug/
+firmware/Release/
+

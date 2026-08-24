@@ -112,20 +112,19 @@ T_end_to_end
 
 ### QoS 0 - Low
 - input: 96x96
-- lightweight model
 - inference period: 100 ms
 
 ### QoS 1 - Medium
-- input: 160x160
-- standard student model
+- input: 96x96
 - inference period: 66 ms
 
 ### QoS 2 - High
-- input: 224x224
-- full student model
+- input: 96x96
 - inference period: 33 ms
 
-초기 구현에서는 모델을 여러 개 넣기보다 inference period 또는 input resolution 한 가지부터 조절한다.
+현재 NPU 검증 모델의 입력 shape가 static `1x3x96x96`이므로 초기 구현에서는
+inference period만 조절한다. 입력 해상도나 모델 variant는 별도 모델을 생성하고
+memory mapping을 다시 검증한 뒤 확장한다.
 
 ---
 

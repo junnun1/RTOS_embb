@@ -44,9 +44,9 @@ ST Edge AI Core의 ONNX import, graph optimization, Neural-ART compiler 실행 �
 - hardware/EC epoch 1개만으로 Neural-ART 연산 가속이 확보됐다고 판단하지 않는다.
 - npuRAM5 사용률이 96.43%이므로 FP32 activation 배치의 여유가 작다.
 
-## Next Validation
+## INT8 Validation Plan
 
-INT8 모델에 대해 동일한 분석을 실행하고 아래 항목을 비교한다.
+INT8 모델에 대해 다음 항목을 비교하도록 계획했고 모두 완료했다.
 
 1. validation accuracy
 2. model and weight size
@@ -102,4 +102,6 @@ INT8 memory mapping:
 - PTQ INT8: 정확도 손실 0.13%p, weights 73.3% 감소, activation 약 83.3% 감소.
 - PTQ INT8의 모든 55 epoch이 hardware/EC에 매핑됐다.
 - baseline Student에는 QAT가 필요하지 않다.
+- KD PTQ도 SW 0 / HW(EC) 55로 전체 매핑됐으며 상세 결과는
+  `docs/KD_STM32_AI_ANALYSIS.md`에 기록했다.
 - 실제 latency와 throughput은 보드에서 profile해야 한다.

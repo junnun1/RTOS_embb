@@ -23,7 +23,18 @@ Student MobileNetV2
 |---|---:|---:|---:|---:|
 | MobileNetV2 FP32 baseline | 95.46% | 2,236,682 | 8.51 MiB | 1x3x96x96 |
 
-PC inference latency는 benchmark script 구현 후 추가한다.
+PC latency는 `results/tables/model_comparison.csv`에 ONNX Runtime CPU, batch 1,
+20 warmup/100 timed runs 조건으로 기록했다.
+
+| Model | Accuracy | PC latency |
+|---|---:|---:|
+| Student baseline FP32 | 95.45% | 1.617 ms |
+| Student KD FP32 | 95.25% | 0.834 ms |
+| Student baseline PTQ INT8 | 95.32% | 2.152 ms |
+| Student KD PTQ INT8 | 95.21% | 2.175 ms |
+
+단일 PC 실행 결과이므로 runtime warm-up, CPU frequency, session optimization에 영향을
+받는다. PC-side 참고값일 뿐이며 NPU 성능이나 모델 간 확정적 latency 우열로 해석하지 않는다.
 
 ---
 
@@ -80,7 +91,7 @@ PTQ는 CIFAR-10 train split의 deterministic sample 1,000장, MinMax calibration
 |---|---:|---:|
 | KD Student FP32 | 95.25% | 8.51 MiB |
 | KD Student PTQ INT8 | 95.21% | 2.54 MiB |
-| KD Student QAT INT8 | TBD | TBD |
+| KD Student QAT INT8 | Not run | Not required |
 
 KD PTQ의 정확도 손실은 0.04%p이며 크기는 70.14% 감소했다. KD가 baseline을
 개선하지 못했으므로 현재 baseline PTQ INT8 모델을 배포 후보로 유지한다.
@@ -97,8 +108,11 @@ KD PTQ의 정확도 손실은 0.04%p이며 크기는 70.14% 감소했다. KD가 
 |---|---|---|---:|---:|---:|---|
 | MobileNetV2 baseline | FP32 ONNX | Passed | 8.47 MiB | 1.58 MiB | 55,041,829 | SW 100 / HW(EC) 1 |
 | MobileNetV2 baseline PTQ | INT8 QDQ ONNX | Passed | 2.26 MiB | 270 KiB | 56,534,389 | SW 0 / HW(EC) 55 |
+| MobileNetV2 KD PTQ | INT8 QDQ ONNX | Passed | 2.26 MiB | 270 KiB | 56,534,389 | SW 0 / HW(EC) 55 |
 
-FP32 결과는 operator compatibility baseline이다. INT8 모델은 compiler 기준 전체 hardware/EC mapping에 성공했다. 실제 NPU latency와 throughput은 보드에서 측정한다.
+FP32 결과는 operator compatibility baseline이다. baseline과 KD INT8 모델은 모두
+compiler 기준 전체 hardware/EC mapping에 성공했다. 실제 NPU latency와 throughput은
+보드에서 측정한다.
 
 측정:
 

@@ -1,87 +1,128 @@
 # Project Resume
 
-이 문서는 작업을 중단했다가 다시 시작할 때 사용하는 단일 진입점이다. 현재 상태, 결과, 로컬 산출물, 재현 명령 및 다음 작업을 요약한다.
+이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-24 기준이며,
+PC-side compression과 STM32N6 compiler validation을 완료한 상태를 기록한다.
 
-## 1. Project Goal
+## 1. Current State
 
-STM32N657 + FreeRTOS 환경에서 경량 CNN을 실행하고 Knowledge Distillation, INT8 quantization, Neural-ART NPU 가속, 실시간 task interference 및 adaptive QoS를 단계적으로 검증한다.
+현재 단계는 **STM32N657 board bring-up 직전**이다.
 
-현재 단계는 보드 도착 전 PC-side compression이다. Teacher/KD 최소 비교와 KD PTQ까지 완료했다.
-
-## 2. Confirmed Configuration
+완료된 end-to-end 경로:
 
 ```text
-Dataset: CIFAR-10
-Teacher: ResNet18 (selected, not trained yet)
+CIFAR-10
+  -> Student baseline training
+  -> FP32 ONNX export/runtime validation
+  -> Static PTQ INT8 QDQ
+  -> Full validation accuracy evaluation
+  -> STM32N6 Neural-ART compiler analysis
+
+ResNet18 Teacher
+  -> KD Student training
+  -> FP32 ONNX export/runtime validation
+  -> Static PTQ INT8 QDQ
+  -> Full validation accuracy evaluation
+  -> STM32N6 Neural-ART compiler analysis
+```
+
+두 INT8 모델 모두 `SW 0 / HW(EC) 55`로 전체 NPU mapping에 성공했다.
+정확도가 더 높은 **baseline PTQ INT8를 배포 후보로 확정**한다.
+
+## 2. Fixed Configuration
+
+```text
+Dataset: CIFAR-10, train 50,000 / validation 10,000
+Teacher: ResNet18, ImageNet pretrained
 Student: MobileNetV2, ImageNet V2 pretrained
 Input: static 1x3x96x96
 Classes: 10
 Seed: 42
+Student epochs: 30
+Teacher epochs: 60
+KD epochs: 30
+KD temperature: 4.0
+KD alpha: 0.5
 Python: 3.12.3
 PyTorch: 2.13.0 + CUDA 13.0
 GPU: NVIDIA GeForce RTX 5060 Ti 16 GB
 ONNX opset: 17
-STM32 tool: ST Edge AI Core 4.0.1-20581
+PTQ: QDQ, INT8/INT8, per-channel, MinMax
+Calibration: deterministic CIFAR-10 train samples 0..999
+ST Edge AI Core: 4.0.1-20581
+Neural-ART compiler: 1.1.3-275
 Target: STM32N6 Neural-ART NPU
 ```
 
-Main config: `configs/cifar10_mobilenetv2.yaml`
+Authoritative config: `configs/cifar10_mobilenetv2.yaml`
 
-## 3. Completed Work
+## 3. Final PC Results
 
-- Repository structure and Python virtual environment
-- CIFAR-10 download and deterministic preprocessing
-- MobileNetV2 10-class model construction
-- Student baseline training for 30 epochs
-- FP32 ONNX export, checker and ONNX Runtime comparison
-- STM32Cube AI Studio FP32 import/analyze
-- Static PTQ with ONNX QDQ, INT8 weights/activations, per-channel
-- Full CIFAR-10 validation of FP32 and INT8 ONNX
-- STM32Cube AI Studio INT8 import/analyze
-- INT8 Neural-ART full hardware/EC mapping confirmation
-- ResNet18 Teacher 60-epoch training
-- Minimal KD training (`temperature=4`, `alpha=0.5`)
-- KD FP32 ONNX export/runtime validation and static PTQ
-- Four-model PC benchmark automation
+| Model | Accuracy | Delta vs baseline FP32 | ONNX size | PC role |
+|---|---:|---:|---:|---|
+| Student baseline FP32 | 95.45% | - | 8.51 MiB | Compatibility baseline |
+| Student baseline PTQ INT8 | **95.32%** | -0.13%p | **2.54 MiB** | **Deployment candidate** |
+| Teacher ResNet18 | 95.03% | -0.42%p | - | KD teacher |
+| Student KD FP32 | 95.25% | -0.20%p | 8.51 MiB | KD comparison |
+| Student KD PTQ INT8 | 95.21% | -0.24%p | 2.54 MiB | Deployable comparison |
 
-## 4. Results
+Additional facts:
 
-### PC Accuracy and Model Size
+- Student training best was 95.46% at epoch 28/30.
+- Teacher best was 95.03% at epoch 60/60.
+- KD Student best was 95.25% at epoch 30/30.
+- baseline FP32 to PTQ loss was 0.13%p.
+- KD FP32 to PTQ loss was 0.04%p.
+- both INT8 ONNX files are 70.14% smaller than their FP32 versions.
+- baseline PyTorch/ONNX Runtime max absolute output error was 0.00000083.
+- KD PyTorch/ONNX Runtime max absolute output error was 0.00000238.
 
-| Model | Accuracy | Accuracy Delta | ONNX Size | Size Reduction |
-|---|---:|---:|---:|---:|
-| Student FP32 ONNX | 95.45% | - | 8.51 MiB | - |
-| Student PTQ INT8 QDQ | 95.32% | -0.13%p | 2.54 MiB | 70.14% |
+Interpretation: Teacher가 Student보다 약했고 최소 KD 실험은 baseline을 개선하지
+못했다. QAT는 PTQ 손실이 이미 작기 때문에 수행하지 않는다.
 
-Training best validation accuracy was 95.46% at epoch 28. PyTorch and FP32 ONNX Runtime max absolute output error was 0.00000083.
+## 4. STM32N6 Compiler Results
 
-### STM32N6 Analyze
+| Metric | Baseline FP32 | Baseline PTQ INT8 | KD PTQ INT8 |
+|---|---:|---:|---:|
+| Compile | Passed | Passed | Passed |
+| Weights | 8.47 MiB | 2.26 MiB | 2.26 MiB |
+| Activations | 1.58 MiB | 270 KiB | 270 KiB |
+| Total mapped memory | 10.049 MiB | 2.526 MiB | 2.526 MiB |
+| MACC | 55,041,829 | 56,534,389 | 56,534,389 |
+| SW epochs | 100 | 0 | 0 |
+| HW/EC epochs | 1 | 55 | 55 |
+| npuRAM5 | 96.43% | 60.27% | 60.27% |
+| octoFlash | 7.56% | 2.02% | 2.02% |
 
-| Metric | FP32 | PTQ INT8 |
-|---|---:|---:|
-| Weights | 8.47 MiB | 2.26 MiB |
-| Activations | 1.58 MiB | 270 KiB |
-| Total mapped memory | 10.049 MiB | 2.526 MiB |
-| Software epochs | 100 | 0 |
-| Hardware/EC epochs | 1 | 55 |
-| Main activation pool | npuRAM5 96.43% | npuRAM5 60.27% |
+FP32는 변환 가능하지만 대부분 software fallback이므로 NPU 배포 후보가 아니다.
+두 QDQ INT8 모델은 compiler 기준 완전한 Neural-ART hardware/EC mapping이다.
 
-Interpretation: FP32 is compatible but mostly software fallback. PTQ INT8 preserves accuracy and maps the complete network to Neural-ART hardware/EC.
+주의:
 
-### Teacher and KD
+- source QDQ ONNX의 boundary는 FP32지만 ST 변환 결과는 INT8 input/output이다.
+- `model_fmt: float` 표시는 QDQ 변환 실패를 의미하지 않는다.
+- `--batch-size 10`은 static batch-1 ONNX shape를 바꾸지 않았다.
+- ST의 `params # (8.47 MiB)`는 논리적 FP32-equivalent 표시다.
+- compiler analyze는 실제 board latency 측정이 아니다.
 
-| Model | Accuracy | ONNX Size |
-|---|---:|---:|
-| Teacher ResNet18 | 95.03% | - |
-| Student KD FP32 ONNX | 95.25% | 8.51 MiB |
-| Student KD PTQ INT8 QDQ | 95.21% | 2.54 MiB |
+## 5. Deployment Decision
 
-Teacher accuracy was 0.42%p below the Student baseline. KD was 0.20%p below the
-baseline, while KD PTQ loss was only 0.04%p. Keep baseline PTQ as the deployment candidate.
+선택 모델:
 
-## 5. Local Artifacts
+```text
+models/student_baseline_int8_qdq.onnx
+```
 
-These files exist locally and are ignored by Git:
+선택 이유:
+
+1. validation accuracy 95.32%로 KD PTQ보다 0.11%p 높다.
+2. FP32 대비 손실이 0.13%p에 불과하다.
+3. weights 2.26 MiB와 activations 270 KiB가 지정 memory pool에 들어간다.
+4. software fallback 없이 55개 epoch 전체가 HW/EC에 매핑된다.
+5. KD 모델과 계산량·메모리가 같으므로 더 낮은 KD 정확도를 선택할 이유가 없다.
+
+## 6. Local and Tracked Artifacts
+
+Git ignored local artifacts:
 
 ```text
 models/mobilenet_v2_cifar10_init.pth
@@ -101,48 +142,31 @@ results/raw_logs/student_kd_history.csv
 training/datasets/cifar-10-batches-py/
 ```
 
-This final comparison table is tracked by Git:
+Tracked results:
 
 ```text
 results/tables/quantization_comparison.csv
 results/tables/kd_quantization_comparison.csv
 results/tables/model_comparison.csv
-```
-
-STM32Cube AI Studio raw reports are tracked with descriptive names:
-
-```text
 results/reports/baseline_fp32_network_analyze_report.txt
 results/reports/baseline_int8_network_analyze_report.txt
 results/reports/kd_int8_network_analyze_report.txt
 ```
 
-Do not commit `.pth`, `.onnx`, downloaded datasets, `.venv`, or raw epoch logs unless the repository storage policy is intentionally changed.
+Do not commit `.pth`, `.onnx`, downloaded datasets, `.venv`, or raw epoch logs unless
+the storage policy is intentionally changed.
 
-## 6. Reproduction Commands
+## 7. Reproduction Commands
 
-Run from the repository root:
+Run from repository root:
 
 ```bash
 source .venv/bin/activate
 
-python -m training.prepare_model \
-  --config configs/cifar10_mobilenetv2.yaml
-
-python -m training.train_student \
-  --config configs/cifar10_mobilenetv2.yaml \
-  --download \
-  --smoke-test
-
-# Remove --smoke-test for the configured 30-epoch run.
-python -m training.train_student \
-  --config configs/cifar10_mobilenetv2.yaml
-
-python -m training.export_onnx \
-  --config configs/cifar10_mobilenetv2.yaml
-
-python -m training.quantize_ptq \
-  --config configs/cifar10_mobilenetv2.yaml
+python -m training.prepare_model --config configs/cifar10_mobilenetv2.yaml
+python -m training.train_student --config configs/cifar10_mobilenetv2.yaml --download
+python -m training.export_onnx --config configs/cifar10_mobilenetv2.yaml
+python -m training.quantize_ptq --config configs/cifar10_mobilenetv2.yaml
 
 python -m training.train_teacher --config configs/cifar10_mobilenetv2.yaml
 python -m training.train_kd --config configs/cifar10_mobilenetv2.yaml
@@ -162,56 +186,63 @@ python -m training.quantize_ptq \
 python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 ```
 
-The PTQ command uses 1,000 deterministic CIFAR-10 training samples for MinMax calibration and evaluates both FP32 and INT8 models on all 10,000 validation images.
+학습 스크립트는 `--smoke-test`를 지원한다. PTQ는 validation 10,000장을 모두
+평가하므로 smoke test가 아니다.
 
-## 7. Next Work
+## 8. Immediate Next Work
 
-Recommended order:
+현재 compression 실험을 반복하지 말고 firmware 단계로 이동한다.
 
-1. Keep baseline PTQ as the deployment candidate; the minimal KD experiment did not improve accuracy.
-2. Revisit Teacher tuning/KD only if another accuracy experiment is required.
-3. Prepare the STM32N657 firmware integration skeleton and inference interface.
-4. After board arrival, perform on-target accuracy, latency, throughput and memory validation before RTOS integration.
+1. STM32CubeIDE/CubeMX project 구조를 준비한다.
+2. baseline PTQ generated Neural-ART runtime을 firmware에 통합한다.
+3. preloaded CIFAR-10 test vector와 expected logits/class를 준비한다.
+4. 단일 inference 결과를 ONNX Runtime output과 비교한다.
+5. DWT CYCCNT profiler와 UART CSV logging을 구현한다.
+6. latency mean/p50/p95/max, throughput, Flash/RAM을 보드에서 측정한다.
+7. inference를 33 ms period의 FreeRTOS task로 전환한다.
+8. background load 0/20/40/60/80%에서 deadline miss와 jitter를 측정한다.
+9. fixed QoS 결과 후 33/66/100 ms inference period 기반 adaptive QoS를 구현한다.
 
-QAT is not currently required because baseline PTQ accuracy loss is only 0.13%p. Reconsider QAT only if KD PTQ has a materially larger loss or a future model fails quantization.
+최초 bring-up에는 camera를 연결하지 않는다.
 
-## 8. Explicit Reference Order
+## 9. Deferred or Conditional Work
 
-When resuming, read these files in order:
+- QAT: future PTQ accuracy loss가 커질 때만 재검토
+- Teacher/KD tuning: 추가 accuracy 연구가 필요할 때만 수행
+- input-resolution/model-switching QoS: 각 variant를 다시 export/analyze한 뒤 수행
+- camera: static test-vector inference 이후
+- pruning, object detection, RL controller, dashboard: MVP 이후
 
-1. `resume.md` — current status, exact results, local artifacts and next work.
-2. `CODEX.md` — repository rules, current priorities and scope restrictions.
-3. `docs/TODO.md` — completed and pending checklist.
-4. `configs/cifar10_mobilenetv2.yaml` — authoritative model/training/export/PTQ settings.
-5. `docs/STM32_AI_ANALYSIS.md` — detailed FP32 vs INT8 STM32N6 analysis.
-6. `docs/KD_STM32_AI_ANALYSIS.md` — KD INT8 STM32N6 analysis and baseline comparison.
-7. `docs/EXPERIMENT_PLAN.md` — required experiment comparison tables.
-8. `training/models.py` — model factory and classifier replacement.
-9. `training/data.py` — preprocessing and reproducible data loaders.
-10. `training/engine.py` — shared training/evaluation loops.
-11. `training/train_student.py` — baseline training and checkpoint schema.
-12. `training/export_onnx.py` — FP32 ONNX export and output validation.
-13. `training/quantize_ptq.py` — QDQ PTQ calibration and accuracy comparison.
-14. `docs/ARCHITECTURE.md` — future FreeRTOS/firmware architecture.
-15. `docs/PROJECT_PLAN.md` — full project milestones and risk policy.
+## 10. Resume Reading Order
 
-Do not infer results from filenames alone. Use `results/tables/quantization_comparison.csv` for PC quantization results and `docs/STM32_AI_ANALYSIS.md` for the manually measured STM32 analysis.
+1. `resume.md`
+2. `CODEX.md`
+3. `docs/TODO.md`
+4. `configs/cifar10_mobilenetv2.yaml`
+5. `docs/EXPERIMENT_PLAN.md`
+6. `docs/STM32_AI_ANALYSIS.md`
+7. `docs/KD_STM32_AI_ANALYSIS.md`
+8. `docs/ARCHITECTURE.md`
+9. `docs/PROJECT_PLAN.md`
+10. `training/models.py`
+11. `training/data.py`
+12. `training/engine.py`
+13. `training/train_student.py`
+14. `training/train_teacher.py`
+15. `training/train_kd.py`
+16. `training/export_onnx.py`
+17. `training/quantize_ptq.py`
+18. `benchmarks/benchmark_models.py`
 
-## 9. Known Notes and Caveats
+Before editing, run `git status --short` and preserve unrelated user changes.
 
-- The source QDQ ONNX has FP32 boundary tensors, but ST Edge AI translated input/output to INT8 and mapped SW 0 / HW 55.
-- AI Studio `model_fmt: float` does not indicate failure for this QDQ model; use the translated tensor types and epoch mapping as evidence.
-- The CLI `--batch-size 10` did not change the static model shape; the analyzed model remains batch 1.
-- ST `params # (8.47 MiB)` is a logical FP32-equivalent parameter display. Actual INT8 deployment weights are 2.26 MiB.
-- STM32 analyze results are compiler estimates, not on-board latency measurements.
-- Model checkpoints contain optimizer state and are larger than deployment-only state dictionaries.
+## 11. Git Reference
 
-## 10. Git State
-
-The last pushed commit before PTQ work is:
+Last pushed experiment commit before this documentation refresh:
 
 ```text
-7eb72a9 Add student baseline and STM32 AI validation
+fd15793 Add teacher KD pipeline and STM32 analysis
 ```
 
-PTQ code, results and documentation changes after that commit are currently uncommitted unless a later commit has been made. Run `git status --short` before continuing and preserve unrelated user changes.
+Always use `git status --short` and `git log -1 --oneline` instead of assuming this
+reference remains current.

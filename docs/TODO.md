@@ -1,182 +1,149 @@
 # TODO
 
-## 오늘 할 일
+## Current Phase
 
-오늘 목표는 **보드 없이도 AI deployment 경로가 실제로 성립하는지 확인하는 것**이다.
+PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포 후보는
+`student_baseline_int8_qdq.onnx`이며, 다음 단계는 STM32N657 board bring-up과
+FreeRTOS inference integration이다.
 
-### P0 - 반드시 완료
+## Completed: PC Compression and Validation
 
-- [x] Git repository 생성
-- [x] 아래 기본 폴더 생성
-  - `training/`
-  - `benchmarks/`
-  - `firmware/`
-  - `docs/`
-  - `results/`
-- [x] Python venv 생성
-- [x] PyTorch / torchvision / ONNX / ONNX Runtime 설치
-- [x] 데이터셋 1개 선정
-- [x] Student 모델 1개 선정
-- [x] pretrained 또는 간단한 baseline inference 실행
-- [x] Student 모델을 ONNX로 export
-- [x] STM32Cube AI Studio에서 ONNX import/analysis 테스트
+### Environment and data
 
-### P1 - 가능하면 오늘
+- [x] Python 3.12 virtual environment와 dependency 고정
+- [x] CIFAR-10 download, preprocessing, deterministic loader 구성
+- [x] static input `1x3x96x96`, seed 42 설정
+- [x] YAML 기반 experiment configuration
 
-- [x] Teacher 모델 선정
-- [x] Student 학습 코드 skeleton 작성
-- [x] Knowledge Distillation loss skeleton 작성
-- [x] accuracy / model size benchmark script 작성
-- [x] `requirements.txt` 생성
+### Student baseline
 
-### 오늘 종료 조건
+- [x] MobileNetV2 ImageNet V2 pretrained Student 학습
+- [x] best validation accuracy 95.46% 확보
+- [x] FP32 ONNX export/checker/ONNX Runtime 비교
+- [x] FP32 ONNX full validation accuracy 95.45% 확인
 
-오늘은 학습 정확도를 높이는 것이 목표가 아니다.
+### Teacher and KD
 
-아래 흐름이 한 번 연결되면 성공이다.
-
-```text
-PyTorch Student
-    -> ONNX
-    -> ONNX Runtime test
-    -> STM32Cube AI Studio validation
-```
-
----
-
-# 보드 도착 전 전체 TODO
-
-## 1. Environment
-
-- [x] Python environment 고정
-- [x] requirements.txt 작성
-- [x] Git repository 정리
-- [x] experiment config 방식 결정
-
-## 2. Dataset
-
-- [x] dataset 결정
-- [x] train/validation split
-- [x] preprocessing pipeline 작성
-- [x] representative calibration dataset 구성
-
-## 3. Teacher
-
-- [x] teacher baseline 확보
-- [x] checkpoint 저장
-- [x] validation script 작성
-
-## 4. Student
-
-- [x] student baseline 학습
-- [x] parameter count 계산
-- [x] model size 계산
-- [x] baseline accuracy 저장
-
-## 5. Distillation
-
+- [x] ResNet18 Teacher 구현 및 60-epoch 학습
+- [x] Teacher best validation accuracy 95.03% 확인
 - [x] KD loss 구현
-- [x] temperature 설정
-- [x] alpha 설정
-- [x] baseline vs KD 비교
+- [x] `temperature=4`, `alpha=0.5`, 30-epoch 최소 KD 실험
+- [x] KD Student FP32 accuracy 95.25% 확인
+- [x] baseline 대비 KD 개선 없음 확인
 
-## 6. Quantization
+### Quantization and benchmark
 
-- [x] PTQ 실험
-- [ ] QAT 실험
-- [x] FP32 vs INT8 accuracy 비교
-- [x] FP32 vs INT8 size 비교
+- [x] static PTQ, ONNX QDQ, INT8/INT8 per-channel 구현
+- [x] CIFAR-10 train 1,000 sample MinMax calibration
+- [x] baseline PTQ accuracy 95.32%, size 2.54 MiB 확인
+- [x] KD PTQ accuracy 95.21%, size 2.54 MiB 확인
+- [x] 네 모델 accuracy/size/PC latency CSV 자동화
+- [x] QAT 불필요 판단
+- [ ] 결과 plot 자동화 — 포트폴리오 정리 단계에서 수행
 
-## 7. Export
+### STM32N6 compiler validation
 
-- [x] ONNX export
-- [x] ONNX checker
-- [x] ONNX Runtime output validation
-- [x] STM32Cube AI Studio import/analyze
-- [x] unsupported operator 확인
-- [x] INT8 ONNX의 Neural-ART HW epoch mapping 확인
+- [x] baseline FP32 import/analyze
+- [x] baseline PTQ INT8 전체 Neural-ART mapping: SW 0 / HW(EC) 55
+- [x] KD PTQ INT8 전체 Neural-ART mapping: SW 0 / HW(EC) 55
+- [x] weights 2.26 MiB, activations 270 KiB 확인
+- [x] 세 raw analyze report 저장
+- [x] baseline PTQ INT8를 최종 배포 후보로 선정
 
-## 8. Benchmark Tools
+QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. baseline PTQ 손실이
+0.13%p이고 KD PTQ 손실도 0.04%p이므로 추가 학습 비용의 근거가 없다.
 
-- [x] accuracy benchmark
-- [x] model size benchmark
-- [x] PC latency benchmark
-- [x] CSV logger
-- [ ] plot script
+## Next: Firmware Preparation
 
-## 9. RTOS Preparation
+### P0 — board bring-up 전 준비
 
-- [ ] FreeRTOS task / queue / semaphore 복습
-- [ ] initial task architecture 작성
-- [ ] task period/deadline 초기값 정하기
-- [ ] profiler interface 설계
-- [ ] UART log format 설계
+- [ ] STM32CubeIDE/CubeMX project 구조 확정
+- [ ] ST Edge AI generated runtime 통합 절차 정리
+- [ ] baseline PTQ input/output tensor interface 정의
+- [ ] preloaded CIFAR-10 test vector와 expected output 생성
+- [ ] DWT CYCCNT profiler interface 설계
+- [ ] UART CSV log schema 정의
+- [ ] FreeRTOS task period, deadline, priority 초깃값 확정
 
-## 10. Board Arrival Ready Check
+### Proposed initial tasks
 
-보드가 도착했을 때 다음 파일이 준비되어 있어야 한다.
+| Task | Initial period | Relative deadline | Initial priority |
+|---|---:|---:|---|
+| Inference | 33 ms | 33 ms | Medium-High |
+| Background workload | configurable | configurable | Medium |
+| Monitor | 100 ms | 100 ms | Medium |
+| Logger | 1000 ms | 1000 ms | Low |
+
+Capture와 camera는 최초 inference 검증 이후 추가한다.
+
+## Board Arrival: First-Day Checklist
+
+- [ ] ST-LINK firmware와 board connection 확인
+- [ ] STM32CubeIDE sample build/flash
+- [ ] LED blink
+- [ ] UART output
+- [ ] FreeRTOS single periodic task
+- [ ] DWT cycle counter 동작 확인
+- [ ] baseline PTQ generated model 최소 inference
+- [ ] test vector의 output을 ONNX Runtime 결과와 비교
+
+## On-Target AI Validation
+
+- [ ] cold/warm inference 분리 측정
+- [ ] latency mean, p50, p95, max 측정
+- [ ] throughput 측정
+- [ ] Flash/RAM 실측값 기록
+- [ ] 반복 inference output 안정성 확인
+- [ ] compiler estimate와 실제 측정값 비교
+
+## RTOS Interference Experiment
+
+- [ ] inference를 periodic FreeRTOS task로 구성
+- [ ] synthetic background workload 구현
+- [ ] load 0/20/40/60/80% 조건 구성
+- [ ] task execution time과 jitter 측정
+- [ ] deadline miss ratio 측정
+- [ ] queue backlog와 CPU utilization 기록
+- [ ] 필요하면 NPU/CPU contention 관찰 항목 추가
+
+## Adaptive QoS
+
+- [ ] fixed inference period baseline 측정
+- [ ] QoS level을 33/66/100 ms inference period로 정의
+- [ ] overload/underload threshold와 hysteresis 정의
+- [ ] heuristic controller 구현
+- [ ] fixed QoS와 adaptive QoS의 deadline miss/latency 비교
+
+현재 모델은 static `96x96`이므로 초기 QoS는 input resolution이나 model switching이
+아니라 inference period만 변경한다.
+
+## Required Local Artifacts
+
+Git에서 제외되지만 board 작업 전에 로컬에 있어야 한다.
 
 ```text
+models/student_baseline_best.pth
 models/student_baseline_fp32.onnx
+models/student_baseline_int8_qdq.onnx
 models/student_kd_fp32.onnx
-models/student_int8.onnx       (가능한 export 방식에 따라 변경)
-results/model_comparison.csv
-training configs
-STM32Cube AI compatibility 결과
+models/student_kd_int8_qdq.onnx
 ```
 
----
+추적되는 결과:
 
-# 보드 도착 후 첫날 TODO
+```text
+results/tables/quantization_comparison.csv
+results/tables/kd_quantization_comparison.csv
+results/tables/model_comparison.csv
+results/reports/baseline_fp32_network_analyze_report.txt
+results/reports/baseline_int8_network_analyze_report.txt
+results/reports/kd_int8_network_analyze_report.txt
+```
 
-- [ ] ST-LINK firmware 확인
-- [ ] CubeIDE sample build
-- [ ] LED blink
-- [ ] UART printf
-- [ ] FreeRTOS single periodic task
-- [ ] DWT cycle counter profiler
-- [ ] AI model 최소 inference
+## Deferred Work
 
-카메라는 첫날 연결하지 않는다.
-
----
-
-# 현재 확보된 결과
-
-## Student Baseline
-
-- Dataset: CIFAR-10 (train 50,000 / validation 10,000)
-- Model: MobileNetV2, ImageNet V2 pretrained
-- Input: FP32 `1x3x96x96`
-- Parameters: 2,236,682
-- Best validation accuracy: 95.46% (epoch 28/30)
-- ONNX size: 8.51 MiB
-- PyTorch vs ONNX Runtime max absolute error: 0.00000083
-
-## STM32N6 FP32 Analysis
-
-- ST Edge AI Core: 4.0.1
-- ONNX import / Neural-ART compilation: 성공
-- Weights: 8.47 MiB
-- Activations: 1.58 MiB
-- MACC: 55,041,829
-- Epoch mapping: SW 100 / HW(EC) 1
-- 결론: operator 호환성은 확인했으나 FP32 연산은 대부분 software fallback이다.
-- INT8 모델과의 HW epoch 및 STM32 memory mapping 비교 완료
-
-## Student PTQ INT8
-
-- Format: ONNX QDQ
-- Calibration: CIFAR-10 train 1,000 samples, MinMax
-- Quantization: INT8 weights / INT8 activations, per-channel
-- FP32 ONNX accuracy: 95.45%
-- INT8 ONNX accuracy: 95.32% (-0.13%p)
-- FP32 ONNX size: 8.51 MiB
-- INT8 ONNX size: 2.54 MiB (-70.14%)
-- Model input/output boundary: FP32 `1x3x96x96` / FP32 `1x10`
-- STM32Cube AI Studio HW epoch 및 memory mapping 확인 완료
-- STM32N6 mapping: SW 0 / HW(EC) 55
-- STM32N6 weights: 2.26 MiB
-- STM32N6 activations: 270 KiB
-- STM32N6 npuRAM5: 60.27%
-- 결론: baseline PTQ 모델은 전체 NPU mapping 성공, QAT 불필요
+- QAT: 현재 PTQ 정확도 손실이 작아 보류
+- Teacher/KD 재튜닝: 추가 accuracy 연구가 필요할 때만 수행
+- camera driver: static test-vector inference 이후
+- multi-model/input-resolution QoS: 각 variant의 NPU mapping 검증 이후
+- pruning, object detection, RL controller, dashboard: MVP 이후

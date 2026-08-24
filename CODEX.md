@@ -8,18 +8,20 @@
 
 ## Current Phase
 
-현재는 **보드 도착 전 compression 단계**이다.
+현재는 **PC compression 완료 후 board bring-up 준비 단계**이다.
 
-Student baseline, PTQ INT8 및 STM32N6 Neural-ART mapping 분석까지 완료했다. 다음 작업은 Teacher/KD 최소 비교 실험이다.
+Student baseline, Teacher/KD, baseline/KD PTQ INT8, ONNX Runtime validation,
+STM32N6 Neural-ART mapping 분석까지 완료했다. baseline과 KD INT8 모두
+`SW 0 / HW(EC) 55`이며 baseline PTQ INT8를 배포 후보로 선택했다.
 
 우선순위:
 
-1. ResNet18 Teacher baseline
-2. 최소 Knowledge Distillation 비교
-3. KD Student PTQ INT8
-4. KD INT8 ONNX Runtime / STM32N6 Neural-ART validation
-5. FP32 / KD / INT8 benchmark automation
-6. 필요할 때만 QAT INT8
+1. STM32CubeIDE/CubeMX board bring-up
+2. baseline PTQ generated Neural-ART runtime 통합
+3. static test-vector inference와 ONNX Runtime output 비교
+4. DWT profiler와 UART CSV logging
+5. FreeRTOS periodic inference 및 interference 실험
+6. fixed QoS baseline 이후 inference-period adaptive QoS
 
 ## Confirmed Baseline
 
@@ -75,6 +77,18 @@ octoFlash: 2.263 MiB / 112 MiB (2.02%)
 ```
 
 PTQ 손실이 0.13%p에 불과하고 전체 NPU mapping이 성공했으므로 baseline에는 QAT를 적용하지 않는다. KD는 프로젝트 비교 근거를 위한 최소 실험으로 수행하고 개선이 없으면 현재 PTQ 모델을 최종 배포 후보로 유지한다.
+
+Teacher/KD 결과:
+
+```text
+Teacher ResNet18 accuracy: 95.03%
+KD Student FP32 accuracy: 95.25%
+KD Student PTQ accuracy: 95.21%
+KD PTQ STM32N6 mapping: SW 0 / HW(EC) 55
+```
+
+KD는 baseline을 개선하지 못했으므로 완료된 비교 실험으로 유지하고, 추가 튜닝은
+명시적으로 accuracy 연구를 재개할 때만 수행한다.
 
 작업을 재개할 때는 repository root의 `resume.md`를 먼저 읽고, 그 문서의 reference order를 따른다.
 

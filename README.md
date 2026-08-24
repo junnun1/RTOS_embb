@@ -1,349 +1,138 @@
-# Edge RTOS AI Project
+# Adaptive Real-Time Edge AI on FreeRTOS
 
-## 1. Project Summary
+STM32N657의 Neural-ART NPU에서 INT8 CNN을 실행하고, FreeRTOS task interference가
+AI latency와 deadline에 미치는 영향을 측정한 뒤 adaptive QoS로 확장하는 프로젝트다.
 
-STM32N657 계열 MCU를 대상으로 FreeRTOS 기반 실시간 AI 파이프라인을 구현한다.
-PC에서 학습한 경량 CNN을 Knowledge Distillation과 INT8 Quantization으로 최적화한 뒤 MCU에 배포하고, RTOS 환경에서 inference latency, memory usage, deadline miss, CPU/NPU utilization을 측정한다.
+현재 **PC-side compression과 ST Edge AI compiler 검증을 완료**했다. 다음 단계는
+STM32N657 firmware bring-up과 on-target inference 측정이다.
 
-최종적으로 시스템 부하에 따라 AI 서비스 수준(QoS)을 조절하는 적응형 Edge AI 시스템까지 확장하는 것을 목표로 한다.
-
-### Current Status
-
-Student baseline과 FP32 배포 경로 검증을 완료했다.
-
-| Item | Result |
-|---|---:|
-| Dataset | CIFAR-10 |
-| Student | MobileNetV2, input 96x96 |
-| Best validation accuracy | 95.46% |
-| Parameters | 2,236,682 |
-| FP32 ONNX size | 8.51 MiB |
-| ONNX Runtime max absolute error | 0.00000083 |
-| STM32N6 FP32 compile | Passed |
-| STM32N6 weights / activations | 8.47 MiB / 1.58 MiB |
-| STM32N6 epoch mapping | SW 100 / HW(EC) 1 |
-| PTQ INT8 QDQ accuracy | 95.32% (-0.13%p) |
-| PTQ INT8 QDQ size | 2.54 MiB (-70.14%) |
-| STM32N6 INT8 epoch mapping | SW 0 / HW(EC) 55 |
-| STM32N6 INT8 weights / activations | 2.26 MiB / 270 KiB |
-
-FP32 모델은 STM32N6에서 변환되지만 대부분 software fallback으로 배치된다. PTQ INT8 모델은 정확도를 거의 유지하면서 모든 epoch이 Neural-ART hardware/EC에 매핑됐다. 현재 작업은 ResNet18 Teacher와 최소 Knowledge Distillation 비교 실험이다. 상세 분석은 [STM32 AI 분석 결과](docs/STM32_AI_ANALYSIS.md), 작업 재개 정보는 [resume.md](resume.md)에 기록한다.
-
-### Core Keywords
-- STM32N657 / Cortex-M55
-- FreeRTOS
-- Edge AI / TinyML
-- CNN
-- Knowledge Distillation
-- INT8 Quantization
-- PTQ / QAT
-- ONNX
-- STM32Cube AI Studio
-- Neural-ART NPU
-- Real-Time Scheduling
-- Deadline / WCET / Utilization
-- Adaptive QoS
-
----
-
-## 2. Main Goal
-
-단순히 "MCU에서 CNN이 동작한다"를 보여주는 것이 아니라 아래 trade-off를 정량적으로 분석한다.
-
-> Accuracy vs Model Size vs Memory vs Inference Latency vs Real-Time Schedulability
-
-최종 결과물은 다음 질문에 답할 수 있어야 한다.
-
-1. Distillation이 작은 모델의 정확도를 얼마나 복구하는가?
-2. INT8 Quantization이 모델 크기와 latency를 얼마나 줄이는가?
-3. AI inference workload가 다른 RTOS task의 deadline에 어떤 영향을 주는가?
-4. CPU/NPU 실행 방식에 따라 interference가 얼마나 달라지는가?
-5. 시스템 부하에 따라 AI QoS를 낮추면 deadline miss를 줄일 수 있는가?
-
----
-
-## 3. Proposed System Architecture
+## Current Results
 
 ```text
-PC Training Environment
-
-Teacher CNN
-   |
-   | Knowledge Distillation
-   v
-Student CNN (FP32)
-   |
-   | PTQ / QAT
-   v
-Student CNN (INT8)
-   |
-   | ONNX Export
-   v
-STM32Cube AI Studio
-   |
-   v
-STM32N657 Firmware
-
-------------------------------------------------
-FreeRTOS
-------------------------------------------------
-Camera / Input
-    |
-Capture Task
-    |
-   Queue
-    v
-Preprocess Task
-    |
-   Queue
-    v
-Inference Task ----> Neural-ART NPU / CPU
-    |
-   Queue
-    v
-Postprocess / Output Task
-
-Resource Monitor Task
-    |
-    +-- CPU utilization
-    +-- NPU utilization
-    +-- inference latency
-    +-- end-to-end latency
-    +-- deadline miss ratio
-    +-- queue occupancy
-
-QoS Controller Task
-    |
-    +-- input resolution
-    +-- inference period
-    +-- model variant
+Dataset: CIFAR-10
+Teacher: ResNet18, ImageNet pretrained
+Student: MobileNetV2, ImageNet V2 pretrained
+Input: static 1x3x96x96
+Classes: 10
+Seed: 42
+ONNX opset: 17
+Target: STM32N6 Neural-ART NPU
+ST Edge AI Core: 4.0.1-20581
 ```
 
----
+### PC accuracy and model size
 
-## 4. Development Phases
+| Model | Accuracy | ONNX size | Decision |
+|---|---:|---:|---|
+| Student baseline FP32 | 95.45% | 8.51 MiB | Compatibility baseline |
+| Student baseline PTQ INT8 | **95.32%** | **2.54 MiB** | **Deployment candidate** |
+| Teacher ResNet18 | 95.03% | - | Weaker than Student |
+| Student KD FP32 | 95.25% | 8.51 MiB | No KD improvement |
+| Student KD PTQ INT8 | 95.21% | 2.54 MiB | Deployable, not selected |
 
-### Phase 0 - Pre-board Preparation
+Student training best accuracy was 95.46%. Baseline FP32 ONNX accuracy was 95.45%,
+and PTQ lost only 0.13%p while reducing ONNX size by 70.14%. KD used
+`temperature=4`, `alpha=0.5` for 30 epochs, but did not improve the baseline.
 
-보드 도착 전에 PC에서 완료할 영역.
+### STM32N6 compiler analysis
 
-- Python environment 구성
-- Dataset 선정
-- Teacher / Student baseline 학습
-- Knowledge Distillation 구현
-- PTQ / QAT 적용
-- ONNX export
-- STM32Cube AI Studio compatibility 확인
-- Benchmark script 작성
-- FreeRTOS architecture 사전 설계
+| Model | Weights | Activations | MACC | Epoch mapping |
+|---|---:|---:|---:|---|
+| Baseline FP32 | 8.47 MiB | 1.58 MiB | 55,041,829 | SW 100 / HW(EC) 1 |
+| Baseline PTQ INT8 | 2.26 MiB | 270 KiB | 56,534,389 | **SW 0 / HW(EC) 55** |
+| KD PTQ INT8 | 2.26 MiB | 270 KiB | 56,534,389 | **SW 0 / HW(EC) 55** |
 
-### Phase 1 - Board Bring-up
+두 INT8 QDQ 모델 모두 software fallback 없이 Neural-ART hardware/epoch controller에
+전체 매핑됐다. FP32는 operator compatibility 확인용이며 배포 후보가 아니다.
+위 수치는 compiler estimate이고 실제 latency·throughput·전력은 보드에서 측정해야 한다.
 
-- STM32CubeIDE project 생성
-- Clock / memory / cache 확인
-- ST-LINK 연결
-- UART logging
-- FreeRTOS basic task 동작
-- periodic task timing 검증
+## Why Baseline PTQ Is Selected
 
-### Phase 2 - AI Deployment
+- baseline PTQ 정확도 95.32%로 네 후보 중 배포형 모델의 정확도가 가장 높다.
+- FP32 대비 정확도 손실은 0.13%p에 불과하다.
+- weights 2.26 MiB, activations 270 KiB로 STM32N6 memory pool에 매핑된다.
+- 모든 55 epoch이 hardware/EC에 매핑된다.
+- KD는 graph와 배포 비용을 바꾸지 않으면서 정확도만 0.11%p 낮췄다.
+- QAT는 현재 PTQ 손실이 작아 수행하지 않는다.
 
-- ONNX model import
-- generated runtime integration
-- inference test vector 실행
-- output 비교
-- latency 측정
-- memory footprint 측정
-
-### Phase 3 - RTOS AI Pipeline
-
-- Input/Capture task
-- Preprocessing task
-- Inference task
-- Output task
-- Queue / Semaphore
-- DMA / Interrupt 필요 시 적용
-
-### Phase 4 - Real-Time Evaluation
-
-- task period 설정
-- execution time 측정
-- WCET 근사
-- CPU load 증가 실험
-- deadline miss 측정
-- queue backlog 측정
-
-### Phase 5 - Adaptive QoS
-
-초기 버전은 heuristic 기반으로 구현한다.
+## Pipeline
 
 ```text
-if deadline_miss_ratio > threshold:
-    decrease_ai_qos()
+CIFAR-10
+  ├─ MobileNetV2 Student baseline
+  │    ├─ FP32 ONNX validation
+  │    └─ Static PTQ QDQ ──> baseline INT8 deployment candidate
+  └─ ResNet18 Teacher
+       └─ KD MobileNetV2
+            ├─ FP32 ONNX validation
+            └─ Static PTQ QDQ ──> KD INT8 comparison model
 
-else if utilization < lower_threshold:
-    increase_ai_qos()
+ONNX ──> ST Edge AI Core ──> STM32N6 Neural-ART analysis
 ```
 
-QoS 후보:
-
-- inference period
-- input resolution
-- student model size
-- CPU/NPU execution target
-
-RL 기반 제어는 선택 확장사항이며 MVP 범위에는 포함하지 않는다.
-
----
-
-## 5. Selected Model Setup
-
-### Teacher
-- ResNet18
-
-### Student
-- MobileNetV2
-- ImageNet V2 pretrained backbone
-- CIFAR-10 10-class classifier
-- static input `1x3x96x96`
-
-FP32 ONNX의 STM32Cube AI operator compatibility는 확인했다. INT8 변환 후 Neural-ART hardware mapping을 다시 측정한다.
-
-### Compression Pipeline
-
-```text
-Teacher FP32
-      |
-      v
-Student FP32 baseline
-      |
-      +--> Student + Knowledge Distillation
-                         |
-                         v
-                    PTQ / QAT
-                         |
-                         v
-                    INT8 Student
-```
-
----
-
-## 6. Evaluation Metrics
-
-### ML Metrics
-- Accuracy
-- F1 score (필요 시)
-- Model size
-- Parameter count
-
-### Embedded Metrics
-- Flash usage
-- SRAM usage
-- Peak RAM usage
-- Inference latency
-- End-to-end latency
-- Throughput
-
-### Real-Time Metrics
-- Task execution time
-- WCET approximation
-- CPU utilization
-- NPU utilization
-- Deadline miss ratio
-- Queue occupancy
-- Jitter
-
----
-
-## 7. Suggested Repository Structure
-
-```text
-edge-rtos-ai/
-|
-+-- README.md
-+-- CODEX.md
-+-- resume.md
-+-- requirements.txt
-+-- configs/
-|   +-- cifar10_mobilenetv2.yaml
-+-- models/
-+-- docs/
-|   +-- PROJECT_PLAN.md
-|   +-- ARCHITECTURE.md
-|   +-- EXPERIMENT_PLAN.md
-|   +-- STM32_AI_ANALYSIS.md
-|   +-- TODO.md
-|
-+-- training/
-|   +-- datasets/
-|   +-- data.py
-|   +-- engine.py
-|   +-- models.py
-|   +-- prepare_model.py
-|   +-- train_student.py
-|   +-- export_onnx.py
-|   +-- quantize_ptq.py
-|
-+-- benchmarks/
-|
-+-- firmware/
-|   +-- Core/
-|   +-- App/
-|   +-- AI/
-|   +-- RTOS/
-|   +-- System/
-|
-+-- results/
-    +-- tables/
-    +-- reports/
-    +-- figures/
-    +-- raw_logs/
-```
-
-### PC Pipeline Commands
+## Reproduce PC Experiments
 
 ```bash
 source .venv/bin/activate
+
 python -m training.prepare_model --config configs/cifar10_mobilenetv2.yaml
-python -m training.train_student \
-  --config configs/cifar10_mobilenetv2.yaml \
-  --download \
-  --smoke-test
+python -m training.train_student --config configs/cifar10_mobilenetv2.yaml --download
 python -m training.export_onnx --config configs/cifar10_mobilenetv2.yaml
 python -m training.quantize_ptq --config configs/cifar10_mobilenetv2.yaml
+
+python -m training.train_teacher --config configs/cifar10_mobilenetv2.yaml
+python -m training.train_kd --config configs/cifar10_mobilenetv2.yaml
+
+python -m training.export_onnx \
+  --config configs/cifar10_mobilenetv2.yaml \
+  --checkpoint models/student_kd_best.pth \
+  --output models/student_kd_fp32.onnx
+
+python -m training.quantize_ptq \
+  --config configs/cifar10_mobilenetv2.yaml \
+  --input models/student_kd_fp32.onnx \
+  --output models/student_kd_int8_qdq.onnx \
+  --comparison-output results/tables/kd_quantization_comparison.csv \
+  --model-name student_kd
+
+python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 ```
 
-`--smoke-test`를 제거하면 config에 지정된 전체 baseline 학습을 실행한다.
+세 학습 명령은 `--smoke-test`로 각각 두 batch의 파이프라인 검증을 지원한다.
 
----
+## Repository Layout
 
-## 8. Definition of MVP
+```text
+configs/       experiment configuration
+training/      data, models, training, KD, ONNX export, PTQ
+benchmarks/    accuracy, size, ONNX Runtime latency comparison
+models/        local checkpoints and ONNX artifacts (Git ignored)
+results/
+  tables/      tracked comparison CSV files
+  reports/     tracked ST Edge AI raw analyze reports
+  raw_logs/    local epoch histories (Git ignored)
+docs/          architecture, plans, TODO, detailed analyses
+firmware/      future STM32N657/FreeRTOS implementation
+```
 
-MVP 완료 조건:
+## Next Phase
 
-- [ ] Teacher / Student 학습 완료
-- [ ] Distillation 적용 완료
-- [ ] INT8 모델 생성 완료
-- [x] FP32 ONNX export 성공
-- [x] STM32Cube AI Studio FP32 import/analyze 성공
-- [ ] FreeRTOS에서 inference task 실행
-- [ ] latency 측정
-- [ ] RAM / Flash 사용량 측정
-- [ ] 최소 1개의 periodic background task와 함께 실행
-- [ ] deadline miss 측정
-- [ ] FP32/KD/INT8 결과 비교 표 작성
+1. STM32CubeIDE project와 generated Neural-ART runtime을 통합한다.
+2. preloaded test vector로 baseline PTQ 단일 inference를 검증한다.
+3. DWT cycle counter로 latency를 측정하고 UART CSV 로그를 만든다.
+4. inference를 FreeRTOS periodic task로 전환한다.
+5. background workload 0/20/40/60/80%에서 latency, jitter, deadline miss를 측정한다.
+6. 고정 QoS baseline 이후 inference period 기반 adaptive QoS를 구현한다.
 
----
+초기 bring-up에는 camera를 사용하지 않는다. RL, pruning, object detection,
+dashboard는 MVP 범위에 포함하지 않는다.
 
-## 9. Non-Goals for Initial Version
+## Documentation
 
-초기 버전에서 아래 기능은 의도적으로 제외한다.
-
-- Docker 기반 embedded toolchain
-- Kubernetes / cloud deployment
-- 복잡한 RL controller
-- multi-board distributed system
-- pruning + distillation + quantization 동시 최적화
-- object detection부터 시작
-
-프로젝트 안정화 이후 확장 가능하다.
+- [작업 재개 요약](resume.md)
+- [전체 프로젝트 계획](docs/PROJECT_PLAN.md)
+- [실험 계획과 결과](docs/EXPERIMENT_PLAN.md)
+- [FP32 및 baseline INT8 STM32 분석](docs/STM32_AI_ANALYSIS.md)
+- [KD INT8 STM32 분석](docs/KD_STM32_AI_ANALYSIS.md)
+- [FreeRTOS/firmware architecture](docs/ARCHITECTURE.md)
+- [현재 TODO](docs/TODO.md)

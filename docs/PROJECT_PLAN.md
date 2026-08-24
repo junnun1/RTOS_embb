@@ -35,7 +35,7 @@ Teacher 모델의 지식을 작은 Student CNN에 전달하고 INT8 Quantization
 Student FP32
 Student + KD FP32
 Student INT8 PTQ
-Student + KD INT8 QAT
+Student + KD INT8 PTQ
 ```
 
 ### Objective B - MCU Deployment
@@ -123,8 +123,9 @@ deadline miss 또는 높은 utilization이 발생할 경우 AI workload를 낮�
 ### M2 - Compression
 - KD
 - PTQ
-- QAT
 - ONNX export
+
+QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다.
 
 ### M3 - Board Bring-up
 - UART
@@ -156,11 +157,14 @@ deadline miss 또는 높은 utilization이 발생할 경우 AI workload를 낮�
 | Milestone | Status | Evidence |
 |---|---|---|
 | M0 - Planning | Complete | repository/config/dataset/model 확정 |
-| M1 - ML Baseline | In progress | Student baseline 95.46%, Teacher 미구현 |
-| M2 - Compression | In progress | PTQ INT8/NPU mapping 완료, KD 비교 미구현 |
-| M3 이후 | Pending | 보드 bring-up 전 단계 |
+| M1 - ML Baseline | Complete | Student 95.46%, Teacher 95.03% |
+| M2 - Compression | Complete | baseline/KD FP32·PTQ 비교 및 NPU mapping 완료 |
+| M3 - Board Bring-up | Next | UART, FreeRTOS periodic task, test-vector inference |
+| M4 이후 | Pending | on-target inference 전 단계 |
 
-현재 확정 구성은 CIFAR-10, ResNet18 Teacher, MobileNetV2 Student, static input `1x3x96x96`이다.
+현재 확정 구성은 CIFAR-10, ResNet18 Teacher, MobileNetV2 Student, static input
+`1x3x96x96`이다. Teacher와 최소 KD는 baseline을 개선하지 못했으므로 baseline
+PTQ INT8 모델을 배포 후보로 확정했다.
 
 ---
 

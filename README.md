@@ -7,6 +7,24 @@ PC에서 학습한 경량 CNN을 Knowledge Distillation과 INT8 Quantization으�
 
 최종적으로 시스템 부하에 따라 AI 서비스 수준(QoS)을 조절하는 적응형 Edge AI 시스템까지 확장하는 것을 목표로 한다.
 
+### Current Status
+
+Student baseline과 FP32 배포 경로 검증을 완료했다.
+
+| Item | Result |
+|---|---:|
+| Dataset | CIFAR-10 |
+| Student | MobileNetV2, input 96x96 |
+| Best validation accuracy | 95.46% |
+| Parameters | 2,236,682 |
+| FP32 ONNX size | 8.51 MiB |
+| ONNX Runtime max absolute error | 0.00000083 |
+| STM32N6 FP32 compile | Passed |
+| STM32N6 weights / activations | 8.47 MiB / 1.58 MiB |
+| STM32N6 epoch mapping | SW 100 / HW(EC) 1 |
+
+FP32 모델은 STM32N6에서 변환되지만 대부분 software fallback으로 배치된다. 현재 작업은 ResNet18 Teacher, Knowledge Distillation, INT8 quantization 순서로 진행한다. 상세 분석은 [STM32 AI 분석 결과](docs/STM32_AI_ANALYSIS.md)에 기록한다.
+
 ### Core Keywords
 - STM32N657 / Cortex-M55
 - FreeRTOS
@@ -174,18 +192,18 @@ RL 기반 제어는 선택 확장사항이며 MVP 범위에는 포함하지 않�
 
 ---
 
-## 5. Recommended Model Setup
+## 5. Selected Model Setup
 
 ### Teacher
 - ResNet18
-- 필요 시 ResNet34
 
 ### Student
-1. MobileNetV2
-2. MobileNetV3-Small
-3. Custom lightweight CNN
+- MobileNetV2
+- ImageNet V2 pretrained backbone
+- CIFAR-10 10-class classifier
+- static input `1x3x96x96`
 
-초기 구현은 MobileNet 계열을 우선 사용하고, STM32Cube AI operator compatibility를 먼저 확인한다.
+FP32 ONNX의 STM32Cube AI operator compatibility는 확인했다. INT8 변환 후 Neural-ART hardware mapping을 다시 측정한다.
 
 ### Compression Pipeline
 
@@ -242,25 +260,25 @@ edge-rtos-ai/
 +-- CODEX.md
 +-- requirements.txt
 +-- configs/
+|   +-- cifar10_mobilenetv2.yaml
 +-- models/
 +-- docs/
 |   +-- PROJECT_PLAN.md
 |   +-- ARCHITECTURE.md
 |   +-- EXPERIMENT_PLAN.md
+|   +-- STM32_AI_ANALYSIS.md
 |   +-- TODO.md
 |
 +-- training/
 |   +-- datasets/
-|   +-- train_teacher.py
+|   +-- data.py
+|   +-- engine.py
+|   +-- models.py
+|   +-- prepare_model.py
 |   +-- train_student.py
-|   +-- distill.py
-|   +-- quantize.py
 |   +-- export_onnx.py
 |
 +-- benchmarks/
-|   +-- benchmark_pc.py
-|   +-- compare_models.py
-|   +-- parse_board_logs.py
 |
 +-- firmware/
 |   +-- Core/
@@ -275,6 +293,20 @@ edge-rtos-ai/
     +-- raw_logs/
 ```
 
+### PC Pipeline Commands
+
+```bash
+source .venv/bin/activate
+python -m training.prepare_model --config configs/cifar10_mobilenetv2.yaml
+python -m training.train_student \
+  --config configs/cifar10_mobilenetv2.yaml \
+  --download \
+  --smoke-test
+python -m training.export_onnx --config configs/cifar10_mobilenetv2.yaml
+```
+
+`--smoke-test`를 제거하면 config에 지정된 전체 baseline 학습을 실행한다.
+
 ---
 
 ## 8. Definition of MVP
@@ -284,8 +316,8 @@ MVP 완료 조건:
 - [ ] Teacher / Student 학습 완료
 - [ ] Distillation 적용 완료
 - [ ] INT8 모델 생성 완료
-- [ ] ONNX export 성공
-- [ ] STM32Cube AI Studio validation 성공
+- [x] FP32 ONNX export 성공
+- [x] STM32Cube AI Studio FP32 import/analyze 성공
 - [ ] FreeRTOS에서 inference task 실행
 - [ ] latency 측정
 - [ ] RAM / Flash 사용량 측정

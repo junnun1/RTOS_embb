@@ -17,6 +17,14 @@ Student MobileNetV2
 - model file size
 - PC inference latency
 
+현재 결과:
+
+| Model | Accuracy | Parameters | ONNX Size | Input |
+|---|---:|---:|---:|---:|
+| MobileNetV2 FP32 baseline | 95.46% | 2,236,682 | 8.51 MiB | 1x3x96x96 |
+
+PC inference latency는 benchmark script 구현 후 추가한다.
+
 ---
 
 ## Experiment 2 - Knowledge Distillation
@@ -38,7 +46,7 @@ L = alpha * CE(student, label)
 
 | Model | Accuracy |
 |---|---:|
-| Student baseline | TBD |
+| Student baseline | 95.46% |
 | Student + KD | TBD |
 
 ---
@@ -66,6 +74,14 @@ FP32 학습 모델을 calibration dataset을 이용해 INT8로 변환.
 ## Experiment 4 - Embedded Inference
 
 보드 도착 후 수행.
+
+보드 도착 전 ST Edge AI Core `analyze` 결과:
+
+| Model | Format | Compile | Weights | Activations | MACC | Epoch mapping |
+|---|---|---|---:|---:|---:|---|
+| MobileNetV2 baseline | FP32 ONNX | Passed | 8.47 MiB | 1.58 MiB | 55,041,829 | SW 100 / HW(EC) 1 |
+
+FP32 결과는 operator compatibility baseline이다. NPU 가속 평가는 INT8 모델과 실제 보드 측정으로 수행한다.
 
 측정:
 

@@ -151,6 +151,17 @@ deadline miss 또는 높은 utilization이 발생할 경우 AI workload를 낮�
 - result plots
 - demo video
 
+### Current Milestone Status
+
+| Milestone | Status | Evidence |
+|---|---|---|
+| M0 - Planning | Complete | repository/config/dataset/model 확정 |
+| M1 - ML Baseline | In progress | Student baseline 95.46%, Teacher 미구현 |
+| M2 - Compression | In progress | FP32 ONNX/STM32 분석 완료, KD/INT8 미구현 |
+| M3 이후 | Pending | 보드 bring-up 전 단계 |
+
+현재 확정 구성은 CIFAR-10, ResNet18 Teacher, MobileNetV2 Student, static input `1x3x96x96`이다.
+
 ---
 
 ## 6. Success Criteria

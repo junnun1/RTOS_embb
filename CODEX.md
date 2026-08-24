@@ -8,18 +8,50 @@
 
 ## Current Phase
 
-현재는 **보드 도착 전 PC-side preparation 단계**이다.
+현재는 **보드 도착 전 compression 단계**이다.
 
-보드 없이 수행 가능한 작업을 먼저 완료해야 한다.
+Student baseline부터 STM32N6 FP32 compatibility 분석까지 완료했다. 다음 작업은 Teacher/KD와 INT8 quantization이다.
 
 우선순위:
 
-1. PyTorch baseline
-2. ONNX export
-3. STM32Cube AI compatibility
-4. Knowledge Distillation
-5. Quantization
-6. Benchmark automation
+1. ResNet18 Teacher baseline
+2. Knowledge Distillation
+3. PTQ INT8
+4. 필요 시 QAT INT8
+5. INT8 ONNX Runtime / STM32N6 Neural-ART validation
+6. FP32 / KD / INT8 benchmark automation
+
+## Confirmed Baseline
+
+```text
+Dataset: CIFAR-10
+Student: MobileNetV2 (ImageNet V2 pretrained)
+Teacher: ResNet18
+Input: static FP32 1x3x96x96
+Classes: 10
+Seed: 42
+```
+
+확보된 Student 결과:
+
+```text
+validation accuracy: 95.46%
+parameters: 2,236,682
+ONNX size: 8.51 MiB
+PyTorch/ONNX Runtime max abs error: 0.00000083
+```
+
+STM32Cube AI Studio / ST Edge AI Core 4.0.1의 STM32N6 분석 결과:
+
+```text
+FP32 ONNX compilation: passed
+weights: 8.47 MiB
+activations: 1.58 MiB
+MACC: 55,041,829
+epoch mapping: SW 100 / HW(EC) 1
+```
+
+FP32 모델은 operator compatibility 확인용 baseline이다. 대부분 software epoch이므로 NPU 배포 성공으로 간주하지 않는다. INT8 모델에서 Neural-ART HW mapping을 다시 확인한다.
 
 ## Coding Rules
 
@@ -35,8 +67,8 @@
 
 ## Model Policy
 
-초기 Student는 MobileNetV2 또는 MobileNetV3-Small을 우선 고려한다.
-Teacher는 ResNet18을 기본으로 한다.
+Student는 MobileNetV2, Teacher는 ResNet18로 확정했다.
+입력 크기는 96x96, 클래스 수는 10으로 고정한다.
 
 첫 번째 목표는 높은 정확도가 아니라 **배포 가능한 end-to-end pipeline 확보**이다.
 
@@ -60,13 +92,14 @@ Teacher는 ResNet18을 기본으로 한다.
 
 ```text
 Dataset
-  -> Teacher Training
   -> Student Baseline
+  -> FP32 ONNX Compatibility Check
+  -> Teacher Training
   -> Knowledge Distillation
   -> PTQ / QAT
-  -> ONNX Export
+  -> INT8 ONNX Export
   -> ONNX Runtime Validation
-  -> STM32Cube AI Validation
+  -> STM32N6 Neural-ART Validation
 ```
 
 ## Benchmark Output

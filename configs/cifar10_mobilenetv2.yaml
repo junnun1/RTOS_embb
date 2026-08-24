@@ -1,0 +1,39 @@
+project:
+  seed: 42
+
+dataset:
+  name: cifar10
+  num_classes: 10
+  input_size: 96
+  root: training/datasets
+  download_url: https://huggingface.co/Peyiloo/peyiloo/resolve/main/cifar-10-python.tar.gz
+  num_workers: 4
+
+model:
+  name: mobilenet_v2
+  pretrained: true
+  weights: IMAGENET1K_V2
+  width_mult: 1.0
+  dropout: 0.2
+
+training:
+  epochs: 30
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+  mixed_precision: true
+
+export:
+  opset_version: 17
+  batch_size: 1
+  absolute_tolerance: 0.0001
+  relative_tolerance: 0.001
+
+paths:
+  torch_cache: models/.cache/torch
+  initial_checkpoint: models/mobilenet_v2_cifar10_init.pth
+  student_best_checkpoint: models/student_baseline_best.pth
+  student_last_checkpoint: models/student_baseline_last.pth
+  student_history: results/raw_logs/student_baseline_history.csv
+  student_baseline_onnx: models/student_baseline_fp32.onnx

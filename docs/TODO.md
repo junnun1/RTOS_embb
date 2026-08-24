@@ -15,16 +15,16 @@
   - `results/`
 - [x] Python venv 생성
 - [x] PyTorch / torchvision / ONNX / ONNX Runtime 설치
-- [ ] 데이터셋 1개 선정
-- [ ] Student 모델 1개 선정
-- [ ] pretrained 또는 간단한 baseline inference 실행
-- [ ] Student 모델을 ONNX로 export
-- [ ] STM32Cube AI Studio에서 ONNX import/validation 테스트
+- [x] 데이터셋 1개 선정
+- [x] Student 모델 1개 선정
+- [x] pretrained 또는 간단한 baseline inference 실행
+- [x] Student 모델을 ONNX로 export
+- [x] STM32Cube AI Studio에서 ONNX import/analysis 테스트
 
 ### P1 - 가능하면 오늘
 
-- [ ] Teacher 모델 선정
-- [ ] Student 학습 코드 skeleton 작성
+- [x] Teacher 모델 선정
+- [x] Student 학습 코드 skeleton 작성
 - [ ] Knowledge Distillation loss skeleton 작성
 - [ ] accuracy / model size benchmark script 작성
 - [x] `requirements.txt` 생성
@@ -51,13 +51,13 @@ PyTorch Student
 - [x] Python environment 고정
 - [x] requirements.txt 작성
 - [x] Git repository 정리
-- [ ] experiment config 방식 결정
+- [x] experiment config 방식 결정
 
 ## 2. Dataset
 
-- [ ] dataset 결정
-- [ ] train/validation split
-- [ ] preprocessing pipeline 작성
+- [x] dataset 결정
+- [x] train/validation split
+- [x] preprocessing pipeline 작성
 - [ ] representative calibration dataset 구성
 
 ## 3. Teacher
@@ -68,10 +68,10 @@ PyTorch Student
 
 ## 4. Student
 
-- [ ] student baseline 학습
-- [ ] parameter count 계산
-- [ ] model size 계산
-- [ ] baseline accuracy 저장
+- [x] student baseline 학습
+- [x] parameter count 계산
+- [x] model size 계산
+- [x] baseline accuracy 저장
 
 ## 5. Distillation
 
@@ -89,18 +89,19 @@ PyTorch Student
 
 ## 7. Export
 
-- [ ] ONNX export
-- [ ] ONNX checker
-- [ ] ONNX Runtime output validation
-- [ ] STM32Cube AI Studio import
-- [ ] unsupported operator 확인
+- [x] ONNX export
+- [x] ONNX checker
+- [x] ONNX Runtime output validation
+- [x] STM32Cube AI Studio import/analyze
+- [x] unsupported operator 확인
+- [ ] INT8 ONNX의 Neural-ART HW epoch mapping 확인
 
 ## 8. Benchmark Tools
 
 - [ ] accuracy benchmark
 - [ ] model size benchmark
 - [ ] PC latency benchmark
-- [ ] CSV logger
+- [x] CSV logger
 - [ ] plot script
 
 ## 9. RTOS Preparation
@@ -116,7 +117,7 @@ PyTorch Student
 보드가 도착했을 때 다음 파일이 준비되어 있어야 한다.
 
 ```text
-models/student_fp32.onnx
+models/student_baseline_fp32.onnx
 models/student_kd_fp32.onnx
 models/student_int8.onnx       (가능한 export 방식에 따라 변경)
 results/model_comparison.csv
@@ -137,3 +138,28 @@ STM32Cube AI compatibility 결과
 - [ ] AI model 최소 inference
 
 카메라는 첫날 연결하지 않는다.
+
+---
+
+# 현재 확보된 결과
+
+## Student Baseline
+
+- Dataset: CIFAR-10 (train 50,000 / validation 10,000)
+- Model: MobileNetV2, ImageNet V2 pretrained
+- Input: FP32 `1x3x96x96`
+- Parameters: 2,236,682
+- Best validation accuracy: 95.46% (epoch 28/30)
+- ONNX size: 8.51 MiB
+- PyTorch vs ONNX Runtime max absolute error: 0.00000083
+
+## STM32N6 FP32 Analysis
+
+- ST Edge AI Core: 4.0.1
+- ONNX import / Neural-ART compilation: 성공
+- Weights: 8.47 MiB
+- Activations: 1.58 MiB
+- MACC: 55,041,829
+- Epoch mapping: SW 100 / HW(EC) 1
+- 결론: operator 호환성은 확인했으나 FP32 연산은 대부분 software fallback이다.
+- 다음 검증: INT8 모델 생성 후 HW epoch 비율, accuracy, memory 비교

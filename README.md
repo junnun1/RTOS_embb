@@ -5,6 +5,7 @@ AI latency와 deadline에 미치는 영향을 측정한 뒤 adaptive QoS로 확�
 
 현재 **PC-side compression과 ST Edge AI compiler 검증을 완료**했다. 다음 단계는
 보드 도착 전에 수행할 RTOS architecture·profiler·metrics·portable skeleton 준비이며,
+현재 `system_metrics` 구현·host test와 portable profiler interface까지 완료했다.
 그 다음 STM32N657 firmware bring-up과 on-target inference를 수행한다.
 
 ## Current Results

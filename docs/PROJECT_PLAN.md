@@ -167,7 +167,7 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 | M0 - Planning | Complete | repository/config/dataset/model 확정 |
 | M1 - ML Baseline | Complete | Student 95.46%, Teacher 95.03% |
 | M2 - Compression | Complete | baseline/KD FP32·PTQ 비교 및 NPU mapping 완료 |
-| M2.5 - Pre-board RTOS | Next | architecture, profiler, metrics, workload, portable skeleton |
+| M2.5 - Pre-board RTOS | In progress | metrics+host test 완료, portable profiler 구현 |
 | M3 - Board Bring-up | Pending | UART, FreeRTOS periodic task, test-vector inference |
 | M4 이후 | Pending | on-target inference 전 단계 |
 

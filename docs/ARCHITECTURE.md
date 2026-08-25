@@ -130,6 +130,25 @@ T_end_to_end
 - mean/min/max는 streaming aggregate로 유지
 - p95는 고정 크기 sample window 또는 histogram으로 계산
 
+### Current portable implementation (2026-08-25)
+
+`firmware/System/system_metrics.c/.h`는 공통 `task_run_record_t`와 아래 계산을
+구현한다.
+
+- release/start/end raw cycle 보존
+- execution/response cycle 및 microsecond 저장
+- unsigned subtraction 기반 32-bit wrap-around 처리
+- injected CPU clock 기반 cycle-to-us 변환
+- zero clock 방어와 `UINT32_MAX` saturation
+- relative deadline 기반 deadline miss 판정
+
+`firmware/System/profiler.c/.h`는 실제 레지스터를 직접 참조하지 않는다. cycle reader
+함수 포인터, opaque context, CPU clock을 초기화 시 주입한다. 따라서 host test에서는
+fake reader를, STM32N657에서는 별도 DWT adapter를 사용할 수 있다.
+
+`tests/firmware/test_system_metrics.c`는 정상 변환, deadline miss, counter wrap-around,
+zero CPU clock을 검증한다. profiler 전용 host test와 DWT adapter는 다음 작업이다.
+
 공통 metrics record:
 
 ```text

@@ -5,7 +5,8 @@
 PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포 후보는
 `student_baseline_int8_qdq.onnx`이다. 다음 단계는 보드 도착을 기다리지 않고
 진행할 수 있는 RTOS architecture, measurement contract, portable firmware skeleton
-준비다. 그 다음에 STM32N657 board bring-up과 실제 inference를 수행한다.
+준비다. `system_metrics` 구현과 host test, portable `profiler` interface 구현까지
+진행했으며, 그 다음에 STM32N657 board bring-up과 실제 inference를 수행한다.
 
 ## Completed: PC Compression and Validation
 
@@ -61,13 +62,34 @@ QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. 
 - [ ] `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` 역할 확정
 - [ ] task period, relative deadline, priority 초깃값 확정
 - [ ] task 간 공유 metrics 구조와 ownership 정의
-- [ ] DWT CYCCNT 기반 profiler interface 설계
-- [ ] cycle counter wrap-around와 cycle-to-time 변환 정책 정의
+- [x] 공통 `task_run_record_t`와 execution/response/deadline 계산 구현
+- [x] hardware cycle reader를 주입받는 portable profiler interface 구현
+- [x] cycle counter wrap-around와 cycle-to-time 변환 정책 구현
+- [x] `system_metrics` host test 작성 및 strict C11 build 통과
+- [ ] profiler host test 작성
 - [ ] mean/min/max와 p95 집계 방식 결정
 - [ ] UART CSV log schema 정의
 - [ ] synthetic workload의 0/20/40/60/80% 부하 생성 방식 정의
 - [ ] QoS 33/66/100 ms와 hysteresis/cooldown 규칙 정의
 - [ ] hardware dependency를 분리한 portable C skeleton 작성
+
+### Implemented portable modules
+
+```text
+firmware/System/system_metrics.c/.h
+firmware/System/profiler.c/.h
+tests/firmware/test_system_metrics.c
+```
+
+현재 상태:
+
+- `system_metrics`: release/start/end cycle, execution/response cycle·microsecond,
+  deadline miss와 task/QoS/background metadata 정의
+- cycle 변환: zero clock 방어, 64-bit 중간 연산, `UINT32_MAX` saturation
+- wrap-around: 32-bit unsigned subtraction 정책 적용 및 host test 통과
+- `profiler`: cycle reader 함수 포인터/context/CPU clock 주입 구조 구현
+- hardware boundary: HAL, FreeRTOS, CMSIS/DWT 직접 의존성 없음
+- pending: profiler fake-reader test와 STM32N657 DWT adapter
 
 ### P1 — 보드 연동용 산출물 준비
 

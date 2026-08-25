@@ -1,13 +1,19 @@
 # Project Resume
 
-이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-24 기준이며,
-PC-side compression과 STM32N6 compiler validation을 완료한 상태를 기록한다.
+이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-25 기준이며,
+PC-side compression과 STM32N6 compiler validation을 완료하고 pre-board RTOS
+portable module 구현을 시작한 상태를 기록한다.
 
 ## 1. Current State
 
 현재 단계는 **보드 도착 전 RTOS preparation**이다. PC compression과 compiler
 validation은 끝났으며, board-independent architecture와 portable firmware skeleton을
 먼저 준비한 뒤 STM32N657 bring-up으로 이동한다.
+
+첫 portable module로 task 실행 record와 cycle/time 변환을 담당하는
+`system_metrics`를 구현하고 host test를 통과했다. 하드웨어 cycle reader를 함수
+포인터로 주입하는 `profiler` interface도 구현했으며, 현재 다음 작업은 profiler host
+test 작성이다. 두 모듈 모두 HAL, FreeRTOS, CMSIS device header에 의존하지 않는다.
 
 완료된 end-to-end 경로:
 
@@ -191,6 +197,38 @@ python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 학습 스크립트는 `--smoke-test`를 지원한다. PTQ는 validation 10,000장을 모두
 평가하므로 smoke test가 아니다.
 
+### Pre-board RTOS host test
+
+현재 `system_metrics` host test는 정상 record, deadline miss, 32-bit cycle counter
+wrap-around, zero CPU clock을 검증한다.
+
+```bash
+cc -std=c11 \
+  -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror \
+  -Ifirmware/System \
+  firmware/System/system_metrics.c \
+  tests/firmware/test_system_metrics.c \
+  -o /tmp/test_system_metrics \
+  && /tmp/test_system_metrics
+```
+
+현재 구현 파일:
+
+```text
+firmware/System/system_metrics.c/.h
+firmware/System/profiler.c/.h
+tests/firmware/test_system_metrics.c
+```
+
+`system_metrics`는 release/start/end cycle, execution/response cycle과 microsecond,
+deadline miss, task/QoS/background metadata를 `task_run_record_t`로 정의한다. cycle
+차이는 unsigned subtraction으로 계산하며, cycle-to-us 변환은 64-bit 중간 연산과
+`UINT32_MAX` saturation을 사용한다.
+
+`profiler`는 cycle reader 함수와 context, CPU clock을 주입받는다. host에서는 fake
+reader, 보드에서는 향후 DWT CYCCNT adapter를 연결한다. profiler 전용 host test와
+실제 DWT adapter는 아직 미완료다.
+
 ## 8. Immediate Next Work
 
 현재 compression 실험을 반복하지 않는다.
@@ -199,12 +237,19 @@ python -m benchmarks.benchmark_models --config configs/cifar10_mobilenetv2.yaml
 
 1. `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` contract를 확정한다.
 2. period/deadline/priority 초깃값과 metrics ownership을 정의한다.
-3. release/start/end timestamp, execution/response time, deadline miss를 담는 record를 정의한다.
-4. DWT CYCCNT profiler interface와 wrap-around/cycle conversion 정책을 설계한다.
-5. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
-6. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
-7. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
-8. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 작성한다.
+3. profiler host test를 추가해 fake cycle reader, invalid argument, wrap-around를 검증한다.
+4. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
+5. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
+6. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
+7. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 확장한다.
+
+완료된 항목:
+
+- release/start/end cycle, execution/response cycle·time, deadline miss record
+- unsigned subtraction 기반 32-bit cycle counter wrap-around 정책
+- 64-bit 중간 연산과 saturation을 포함한 cycle-to-us 변환
+- 함수 포인터와 context를 주입받는 board-independent profiler interface
+- `system_metrics` host test 및 strict C11 warning-free build
 
 보드가 없으므로 CPU clock, peripheral handle, memory address, generated AI symbol을
 임의로 hardcode하지 않는다.

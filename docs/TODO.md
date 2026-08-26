@@ -7,7 +7,9 @@ PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포
 진행할 수 있는 RTOS architecture, measurement contract, portable firmware skeleton
 준비다. 여러 periodic inference task가 단일 NPU mutex를 경쟁하는 non-preemptive
 fixed-priority RM 구조와 metrics ownership을 확정했다. `system_metrics`와 `profiler`
-host test도 완료했으며, 다음은 window metrics/QoS contract를 portable C로 옮기는 단계다.
+host test도 완료했다. Windows에서는 NUCLEO-N657X0-Q FSBL+Appli FreeRTOS smoke project를
+생성·빌드했으며, 다음은 window metrics/QoS portable C 구현과 on-target heartbeat
+검증이다.
 
 ## Completed: PC Compression and Validation
 
@@ -114,14 +116,17 @@ ST GUI/toolchain은 Windows에 설치하고 WSL에 중복 설치하지 않는다
 portable C/Python 개발과 Git 작업에 사용하고, CubeMX/CubeIDE/Programmer는 Windows에서
 실행한다.
 
-- [ ] Windows의 STM32CubeIDE, STM32CubeMX, STM32CubeProgrammer 설치와 버전 확인
-- [ ] CubeMX에서 최신 호환 STM32CubeN6 firmware package 설치
-- [ ] CubeMX Software Packs에서 X-CUBE-FREERTOS 설치
-- [ ] `STM32N657X0H3Q`, Secure domain only, FSBL+Appli 프로젝트 생성
-- [ ] context를 Application으로 선택하고 X-CUBE-FREERTOS/CMSIS-RTOS2 활성화
-- [ ] HAL timebase를 TIM16으로 지정하고 SysTick을 FreeRTOS kernel tick에 사용
-- [ ] preemption, time slicing, 1 kHz tick, mutex/queue, stack overflow check 설정
-- [ ] default LED blink task 생성 및 build
+- [x] STM32CubeIDE 2.2.0, STM32CubeMX 6.18.1, bundled Programmer CLI 2.23.0 확인
+- [x] STM32Cube FW_N6 V1.4.1 설치/생성 프로젝트 적용 확인
+- [x] X-CUBE-FREERTOS 1.6.0, FreeRTOS kernel 11.2.0 설치
+- [x] `NUCLEO-N657X0-Q`/`STM32N657X0H3Q`, Secure domain only, FSBL+Appli 생성
+- [x] Application context에서 X-CUBE-FREERTOS/CMSIS-RTOS2 활성화
+- [x] HAL timebase TIM16, SysTick FreeRTOS kernel tick 설정
+- [x] preemption, time slicing, 1 kHz tick, mutex, stack overflow check 설정
+- [x] FSBL/Application build와 500 ms default-task heartbeat build
+- [ ] 보드에서 heartbeat 증가와 FreeRTOS Task List 확인
+- [ ] board-default free GPIO의 runtime-context warning 정리
+- [ ] LED default task build/flash
 - [ ] 보드 도착 후 DEV boot, flash/debug, FreeRTOS Task List 확인
 - [ ] UART LoggerTask 추가
 - [ ] 단일 InferenceTask와 warm inference timing 검증
@@ -184,16 +189,26 @@ firmware/System/qos_controller.c/.h
 firmware/AI/ai_model_adapter.c/.h
 ```
 
-보드와 CubeMX 생성 파일이 없으므로 이 단계에서는 HAL·FreeRTOS 연결부를 adapter로
-분리한다. 실제 board clock, memory address, peripheral handle은 임의로 확정하지 않는다.
+로컬 CubeMX smoke project는 아래 Windows workspace에 있으며 repository에는 추적하지
+않는다.
+
+```text
+C:\Users\SSAFY\STM32CubeIDE\workspace_2.2.0\NUCLEO_RTOS_TEST
+```
+
+이 project는 target toolchain과 CMSIS-RTOS2 생성/빌드 검증용이다. 최종 target project를
+repository에 통합할 때도 HAL·FreeRTOS 연결부를 adapter로 분리하며, 실제 board clock,
+memory address와 generated AI symbol은 runtime 확인 전 임의로 확정하지 않는다.
 
 ## Board Arrival: First-Day Checklist
 
 - [ ] ST-LINK firmware와 board connection 확인
-- [ ] STM32CubeIDE sample build/flash
+- [x] STM32CubeIDE FSBL/Application sample build
+- [ ] DEV boot flash/debug launch
 - [ ] LED blink
 - [ ] UART output
-- [ ] FreeRTOS single periodic task
+- [x] FreeRTOS single heartbeat task compile/link
+- [ ] FreeRTOS single heartbeat task on-target 실행
 - [ ] DWT cycle counter 동작 확인
 - [ ] baseline PTQ generated model 최소 inference
 - [ ] test vector의 output을 ONNX Runtime 결과와 비교

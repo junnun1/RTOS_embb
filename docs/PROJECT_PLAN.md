@@ -138,6 +138,7 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 - windowed logical NPU utilization/DMR contract
 - global inference-period QoS policy
 - portable firmware skeleton
+- Windows NUCLEO-N657X0-Q FSBL+Appli CMSIS-RTOS2 smoke build
 
 ### M3 - Board Bring-up
 - UART
@@ -171,8 +172,8 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 | M0 - Planning | Complete | repository/config/dataset/model 확정 |
 | M1 - ML Baseline | Complete | Student 95.46%, Teacher 95.03% |
 | M2 - Compression | Complete | baseline/KD FP32·PTQ 비교 및 NPU mapping 완료 |
-| M2.5 - Pre-board RTOS | In progress | metrics/profiler host test와 multi-inference RM/NPU mutex architecture 확정 |
-| M3 - Board Bring-up | Pending | UART, FreeRTOS periodic task, test-vector inference |
+| M2.5 - Pre-board RTOS | In progress | portable metrics/profiler, RTOS architecture, Windows FSBL+Appli heartbeat build |
+| M3 - Board Bring-up | Pending | on-target heartbeat/Task List, LED, UART, test-vector inference |
 | M4 이후 | Pending | on-target inference 전 단계 |
 
 현재 확정 구성은 CIFAR-10, ResNet18 Teacher, MobileNetV2 Student, static input

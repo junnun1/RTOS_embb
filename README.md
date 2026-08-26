@@ -4,10 +4,10 @@ STM32N657의 Neural-ART NPU에서 INT8 CNN을 실행하고, 여러 periodic Free
 inference task가 단일 NPU를 공유할 때의 blocking, utilization, deadline miss를 측정한
 뒤 adaptive QoS로 확장하는 프로젝트다.
 
-현재 **PC-side compression과 ST Edge AI compiler 검증을 완료**했다. 다음 단계는
-보드 도착 전에 수행할 RTOS architecture·profiler·metrics·portable skeleton 준비이며,
-현재 `system_metrics` 구현·host test와 portable profiler interface까지 완료했다.
-그 다음 STM32N657 firmware bring-up과 on-target inference를 수행한다.
+현재 **PC-side compression과 ST Edge AI compiler 검증을 완료**했다. RTOS 쪽은
+`system_metrics`/`profiler` host test와 architecture를 완료했고, NUCLEO-N657X0-Q용
+Secure-domain-only FSBL+Appli CMSIS-RTOS2 smoke project도 Windows STM32CubeIDE에서
+빌드했다. 다음 단계는 portable window/QoS logic과 on-target heartbeat/FreeRTOS bring-up이다.
 
 ## Current Results
 
@@ -115,7 +115,7 @@ results/
   reports/     tracked ST Edge AI raw analyze reports
   raw_logs/    local epoch histories (Git ignored)
 docs/          architecture, plans, TODO, detailed analyses
-firmware/      future STM32N657/FreeRTOS implementation
+firmware/      portable STM32N657/FreeRTOS system implementation
 ```
 
 ## Next Phase
@@ -130,13 +130,13 @@ firmware/      future STM32N657/FreeRTOS implementation
 
 보드 도착 후:
 
-1. STM32CubeIDE project와 generated Neural-ART runtime을 통합한다.
-2. preloaded test vector로 baseline PTQ 단일 inference를 검증한다.
-3. DWT cycle counter로 실제 latency를 측정하고 UART CSV 로그를 확인한다.
-4. 동일 모델을 실행하는 periodic InferenceTask 3개와 공용 NPU mutex를 구성한다.
-5. fixed QoS에서 priority inheritance, blocking, logical NPU utilization, DMR을 측정한다.
-6. 고정 QoS baseline 이후 global inference-period QoS heuristic을 구현한다.
-7. UART state/action contract를 통해 PC RL controller로 확장한다.
+1. DEV boot에서 FSBL/Application debug와 500 ms heartbeat를 확인한다.
+2. LED/UART를 bring-up하고 generated Neural-ART runtime을 통합한다.
+3. preloaded test vector로 baseline PTQ 단일 inference를 검증한다.
+4. DWT cycle counter로 실제 latency를 측정하고 UART CSV 로그를 확인한다.
+5. 동일 모델을 실행하는 periodic InferenceTask 3개와 공용 NPU mutex를 구성한다.
+6. fixed QoS에서 priority inheritance, blocking, logical NPU utilization, DMR을 측정한다.
+7. 고정 QoS baseline 이후 global heuristic과 PC RL transport로 확장한다.
 
 초기 bring-up에는 camera를 사용하지 않는다. RL, pruning, object detection,
 dashboard는 MVP 범위에 포함하지 않는다.

@@ -1,14 +1,14 @@
 # Project Resume
 
 이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-26 기준이며,
-PC-side compression과 STM32N6 compiler validation을 완료하고 pre-board RTOS
-portable module 구현을 시작한 상태를 기록한다.
+PC-side compression과 STM32N6 compiler validation을 완료하고 portable RTOS logic과
+Windows STM32Cube bring-up 준비를 병행하는 상태를 기록한다.
 
 ## 1. Current State
 
-현재 단계는 **보드 도착 전 RTOS preparation**이다. PC compression과 compiler
-validation은 끝났으며, board-independent architecture와 portable firmware skeleton을
-먼저 준비한 뒤 STM32N657 bring-up으로 이동한다.
+현재 단계는 **보드 도착 전 RTOS preparation 및 Windows target smoke-build 완료**다.
+PC compression과 compiler validation은 끝났으며, board-independent architecture와
+portable firmware skeleton을 확장하면서 실제 STM32N657 runtime 검증을 기다린다.
 
 첫 portable module로 task 실행 record와 cycle/time 변환을 담당하는
 `system_metrics`를 구현하고 host test를 통과했다. 하드웨어 cycle reader를 함수
@@ -16,6 +16,13 @@ validation은 끝났으며, board-independent architecture와 portable firmware 
 BackgroundTask 대신 세 periodic InferenceTask가 application NPU mutex를 경쟁하는
 non-preemptive fixed-priority RM 방식으로 확정했다. Monitor와 QoSController는 분리하며,
 다음 작업은 이 contract를 window metrics와 portable C interface로 옮기는 것이다.
+
+Windows에서는 `NUCLEO-N657X0-Q` (`STM32N657X0H3Q`)용 Secure-domain-only
+FSBL+Appli smoke project를 생성했다. Application context에 X-CUBE-FREERTOS
+CMSIS-RTOS2를 배치하고 HAL timebase를 TIM16으로 옮겼으며, FSBL과 Application이 모두
+STM32CubeIDE에서 빌드됐다. `defaultTask`에는 500 ms마다 증가하는 volatile heartbeat를
+추가해 다시 빌드했지만, 보드에서 scheduler와 heartbeat가 실제 실행되는지는 아직
+검증하지 않았다.
 
 완료된 end-to-end 경로:
 
@@ -64,6 +71,43 @@ Target: STM32N6 Neural-ART NPU
 ```
 
 Authoritative config: `configs/cifar10_mobilenetv2.yaml`
+
+### Verified Windows RTOS toolchain
+
+```text
+Board: NUCLEO-N657X0-Q (MB1940)
+MCU: STM32N657X0H3Q
+STM32CubeIDE: 2.2.0
+STM32CubeMX: 6.18.1
+STM32CubeProgrammer CLI: 2.23.0 (CubeIDE bundled)
+STM32Cube FW_N6: 1.4.1
+X-CUBE-FREERTOS: 1.6.0
+FreeRTOS kernel: 11.2.0, ST modified 2026-03-27
+GNU Tools for STM32: 14.3.1
+GNU Make: 4.4.1
+```
+
+Local smoke project, not tracked in this repository:
+
+```text
+C:\Users\SSAFY\STM32CubeIDE\workspace_2.2.0\NUCLEO_RTOS_TEST
+```
+
+Generated configuration:
+
+- Secure domain only, FSBL+Appli, no custom ExtMemLoader project
+- FreeRTOS/CMSIS-RTOS2 in Application only
+- HAL tick on TIM16, FreeRTOS kernel tick on SysTick, tick rate 1 kHz
+- preemption/time slicing enabled, stack overflow check mode 2
+- `configENABLE_TRUSTZONE=0`, `configRUN_FREERTOS_SECURE_ONLY=1`, FPU enabled
+- FSBL/Application ELF generation passed
+- Application heartbeat compile/link passed; on-target observation pending
+
+Known non-blocking build/setup warnings:
+
+- generated LRUN linker script produces a GNU ld RWX LOAD-segment warning
+- Board Selector preconfigured GPIOs can remain without a runtime context; this did not
+  block the smoke build, but their ownership must be cleaned up before board flash
 
 ## 3. Final PC Results
 
@@ -257,22 +301,25 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 - full-inference application NPU mutex와 priority inheritance policy
 - Monitor/QoSController 분리 및 metrics single-writer ownership
 - logical NPU utilization `U*=0.67`, DMR `M*=0.05` 초기 reference
+- Windows toolchain/package 확인과 NUCLEO-N657X0-Q FSBL+Appli project 생성
+- Application CMSIS-RTOS2, TIM16 HAL timebase, 1 kHz FreeRTOS configuration
+- FSBL/Application smoke build와 default-task heartbeat build
 
 보드가 없으므로 CPU clock, peripheral handle, memory address, generated AI symbol을
 임의로 hardcode하지 않는다.
 
 ### After board arrival
 
-1. STM32CubeIDE/CubeMX project 구조를 준비한다.
-2. baseline PTQ generated Neural-ART runtime을 firmware에 통합한다.
-3. preloaded CIFAR-10 test vector와 expected logits/class를 준비한다.
-4. 단일 inference 결과를 ONNX Runtime output과 비교한다.
-5. DWT CYCCNT profiler와 UART CSV logging을 구현한다.
-6. latency mean/p50/p95/max, throughput, Flash/RAM을 보드에서 측정한다.
-7. 동일 모델을 사용하는 periodic InferenceTask 3개와 공용 NPU mutex를 구성한다.
-8. warm inference `C_i` 측정 후 `U*=0.67` 기준 base period/QoS scale을 확정한다.
-9. fixed global QoS에서 blocking, logical NPU utilization, DMR을 측정한다.
-10. board-local heuristic QoS를 구현한 뒤 PC RL state/action transport로 확장한다.
+1. NUCLEO board를 DEV boot로 연결하고 FSBL/Application debug launch를 검증한다.
+2. debugger에서 `g_heartbeat` 증가와 FreeRTOS Task List를 확인한다.
+3. board-default GPIO context warning을 정리하고 LED/UART bring-up을 수행한다.
+4. baseline PTQ generated Neural-ART runtime을 firmware에 통합한다.
+5. preloaded CIFAR-10 test vector와 expected logits/class를 준비한다.
+6. 단일 inference 결과를 ONNX Runtime output과 비교한다.
+7. DWT CYCCNT profiler와 UART CSV logging을 구현한다.
+8. latency mean/p50/p95/max, throughput, Flash/RAM을 보드에서 측정한다.
+9. 동일 모델을 사용하는 periodic InferenceTask 3개와 공용 NPU mutex를 구성한다.
+10. warm inference `C_i` 측정 후 fixed/adaptive QoS 실험으로 확장한다.
 
 최초 bring-up에는 camera를 연결하지 않는다.
 
@@ -290,11 +337,11 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 1. `resume.md`
 2. `AGENTS.md`
 3. `docs/TODO.md`
-4. `configs/cifar10_mobilenetv2.yaml`
+4. `docs/ARCHITECTURE.md`
 5. `docs/EXPERIMENT_PLAN.md`
-6. `docs/STM32_AI_ANALYSIS.md`
-7. `docs/KD_STM32_AI_ANALYSIS.md`
-8. `docs/ARCHITECTURE.md`
+6. `configs/cifar10_mobilenetv2.yaml`
+7. `docs/STM32_AI_ANALYSIS.md`
+8. `docs/KD_STM32_AI_ANALYSIS.md`
 9. `docs/PROJECT_PLAN.md`
 10. `training/models.py`
 11. `training/data.py`
@@ -310,10 +357,10 @@ Before editing, run `git status --short` and preserve unrelated user changes.
 
 ## 11. Git Reference
 
-Last pushed commit before the current agent-instruction migration:
+Last observed commit before this documentation update:
 
 ```text
-aa67f5c docs: add STM32 FreeRTOS setup checklist
+b1aedab docs: migrate repository guidance to AGENTS
 ```
 
 Always use `git status --short` and `git log -1 --oneline` instead of assuming this

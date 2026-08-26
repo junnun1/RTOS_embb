@@ -411,6 +411,28 @@ tests/firmware/test_profiler.c
 - unsigned subtraction 기반 32-bit cycle wrap-around
 - strict C11 host tests
 
+Windows target smoke validation 완료:
+
+```text
+Target: NUCLEO-N657X0-Q / STM32N657X0H3Q
+Project structure: Secure domain only, FSBL + Appli
+RTOS context: Application only, CMSIS-RTOS2
+HAL timebase: TIM16
+FreeRTOS tick: SysTick, 1 kHz
+Toolchain: STM32CubeIDE 2.2.0, GNU Tools for STM32 14.3.1
+Result: FSBL/Application build passed
+```
+
+Application `defaultTask`의 volatile heartbeat는 500 ms period로 compile/link됐지만 실제
+scheduler 실행과 counter 증가는 board debug 전까지 검증된 결과로 취급하지 않는다.
+현재 project는 Windows CubeIDE workspace의 local smoke artifact이며 repository source of
+truth가 아니다. 최종 target project는 portable `firmware/System`, `firmware/RTOS`,
+`firmware/AI` source를 복제하지 않고 source folder/adapter 경계로 연결한다.
+
+generated LRUN linker script의 RWX LOAD-segment warning과 Board Selector가 만든 일부
+GPIO의 미지정 runtime context warning이 남아 있다. 전자는 최종 memory protection/linker
+검토 대상이고, 후자는 board flash 전에 사용 핀과 context ownership을 정리해야 한다.
+
 현재 `task_run_record_t`의 background-related field는 이전 설계의 잔재다. 즉시 ABI를
 변경하기보다 다음 metrics contract 작업에서 stream ID, mutex wait, window accounting을
 포함하도록 정리한다.
@@ -424,13 +446,14 @@ tests/firmware/test_profiler.c
 - host test
 - AI runtime adapter interface
 - UART schema
+- Windows target project generation/build contract
 
 보드에서 확인 후 확정:
 
 - warm inference service time `C_i`
 - base periods와 QoS scale
 - actual FreeRTOS priorities
-- tick rate
+- generated tick rate의 on-target 동작
 - ST runtime sync/async configuration과 OSAL integration
 - DWT adapter, UART handle, generated network symbols
 - non-preemptive response-time analysis 입력값

@@ -146,6 +146,22 @@ dispatcher와 synthetic CPU BackgroundTask는 사용하지 않는다.
 - global inference-period QoS scale 정의
 - non-preemptive blocking/response-time analysis
 
+Pre-board target smoke baseline은 완료했다.
+
+```text
+Board/MCU: NUCLEO-N657X0-Q / STM32N657X0H3Q
+Project: Secure-domain-only FSBL+Appli
+RTOS: X-CUBE-FREERTOS 1.6.0, CMSIS-RTOS2 in Application
+Timebase: TIM16 for HAL, SysTick 1 kHz for FreeRTOS
+Build: FSBL ELF passed, Application ELF/BIN passed
+Task smoke: 500 ms volatile heartbeat compile/link passed
+Runtime: not measured; board debug pending
+```
+
+이 결과는 toolchain/code-generation baseline일 뿐 on-target scheduling 결과가 아니다.
+generated LRUN ELF의 RWX LOAD-segment warning은 현재 build를 막지 않았으며 최종 linker와
+memory-protection 검토 항목으로 유지한다.
+
 실제 timing 결과는 보드에서만 기록한다. host stub이나 compiler estimate를
 on-target RTOS 결과로 사용하지 않는다.
 

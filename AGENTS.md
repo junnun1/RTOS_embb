@@ -37,6 +37,10 @@ period QoS heuristic을 구현한다. 이후 동일한 state/action contract를 
 - portable `system_metrics`와 host test
 - injected cycle reader 기반 `profiler`와 host test
 - multi-inference fixed-priority RM/NPU mutex architecture 확정
+- Windows STM32Cube toolchain/package 확인
+- NUCLEO-N657X0-Q Secure-domain-only FSBL+Appli project 생성
+- Application CMSIS-RTOS2/TIM16 설정과 FSBL/Application smoke build
+- 500 ms default-task heartbeat compile/link
 
 현재 다음 작업:
 
@@ -127,13 +131,32 @@ clone은 Git push/pull로 동기화하고 같은 파일을 양쪽에서 동시�
 `\\wsl.localhost\...` 경로를 CubeIDE workspace로 직접 사용하는 방식은 indexing,
 build performance와 permission 문제 때문에 기본안으로 사용하지 않는다.
 
+2026-08-26 확인된 Windows 구성:
+
+```text
+Board: NUCLEO-N657X0-Q / STM32N657X0H3Q
+STM32CubeIDE: 2.2.0
+STM32CubeMX: 6.18.1
+STM32CubeProgrammer CLI: 2.23.0 (CubeIDE bundled)
+STM32Cube FW_N6: 1.4.1
+X-CUBE-FREERTOS: 1.6.0, FreeRTOS kernel 11.2.0
+GNU Tools for STM32: 14.3.1
+```
+
+로컬 smoke project는
+`C:\Users\SSAFY\STM32CubeIDE\workspace_2.2.0\NUCLEO_RTOS_TEST`에 있으며 repository에
+추적되지 않는다. Secure domain only, FSBL+Appli, Application CMSIS-RTOS2, TIM16 HAL
+timebase, 1 kHz SysTick kernel tick으로 생성됐고 두 ELF가 빌드됐다. heartbeat는 빌드만
+확인됐으며 on-target 실행은 미검증이다. generated LRUN linker의 RWX LOAD-segment
+warning은 smoke build를 막지 않지만 최종 memory/security 검토 전에 무시해서는 안 된다.
+
 ## STM32/FreeRTOS Bring-up Order
 
-1. Windows tool versions, STM32CubeN6, X-CUBE-FREERTOS 확인
-2. `STM32N657X0H3Q`, Secure domain only, FSBL+Appli 프로젝트 생성
-3. Application context에서 X-CUBE-FREERTOS/CMSIS-RTOS2 활성화
-4. HAL timebase TIM16, SysTick FreeRTOS tick 설정
-5. LED default task build/flash
+1. Windows tool versions, STM32CubeN6, X-CUBE-FREERTOS 확인 — 완료
+2. `NUCLEO-N657X0-Q`/`STM32N657X0H3Q`, Secure domain only, FSBL+Appli 생성 — 완료
+3. Application context에서 X-CUBE-FREERTOS/CMSIS-RTOS2 활성화 — 완료
+4. HAL timebase TIM16, SysTick FreeRTOS tick 설정과 smoke build — 완료
+5. default-task heartbeat debug, FreeRTOS Task List, LED build/flash — 보드에서 확인
 6. UART LoggerTask
 7. 단일 InferenceTask와 warm inference timing
 8. application NPU mutex

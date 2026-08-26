@@ -288,7 +288,7 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 ## 10. Resume Reading Order
 
 1. `resume.md`
-2. `CODEX.md`
+2. `AGENTS.md`
 3. `docs/TODO.md`
 4. `configs/cifar10_mobilenetv2.yaml`
 5. `docs/EXPERIMENT_PLAN.md`
@@ -310,10 +310,10 @@ Before editing, run `git status --short` and preserve unrelated user changes.
 
 ## 11. Git Reference
 
-Last pushed commit before the current RTOS architecture documentation adjustment:
+Last pushed commit before the current agent-instruction migration:
 
 ```text
-5715b8f test: add portable profiler host coverage
+aa67f5c docs: add STM32 FreeRTOS setup checklist
 ```
 
 Always use `git status --short` and `git log -1 --oneline` instead of assuming this

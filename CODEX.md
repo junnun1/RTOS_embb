@@ -4,7 +4,7 @@
 
 ## Project Objective
 
-경량 CNN을 Knowledge Distillation과 INT8 Quantization으로 압축하고 STM32N657 MCU에 배포한다. 이후 FreeRTOS 환경에서 AI inference task와 다른 periodic task를 함께 실행하여 latency, resource utilization, deadline miss를 측정하고 adaptive QoS까지 구현한다.
+경량 CNN을 Knowledge Distillation과 INT8 Quantization으로 압축하고 STM32N657 MCU에 배포한다. 이후 동일 NPU를 공유하는 여러 periodic FreeRTOS inference task를 fixed priority로 실행하여 blocking, logical NPU utilization, deadline miss를 측정하고 adaptive QoS까지 구현한다.
 
 ## Current Phase
 
@@ -16,12 +16,12 @@ STM32N6 Neural-ART mapping 분석까지 완료했다. baseline과 KD INT8 모두
 
 우선순위:
 
-1. FreeRTOS task/priority/period/deadline contract
-2. metrics record, DWT profiler interface, UART CSV schema
-3. synthetic background workload와 inference-period QoS policy
-4. hardware dependency를 분리한 portable firmware skeleton
+1. periodic inference task/RM priority/NPU mutex/period/deadline contract
+2. windowed logical NPU utilization, DMR, metrics ownership, UART CSV schema
+3. Monitor/QoSController 분리와 global inference-period QoS policy
+4. non-preemptive response-time analysis와 portable firmware skeleton
 5. 보드 도착 후 baseline PTQ Neural-ART runtime 통합
-6. on-target inference, interference, adaptive QoS 실험
+6. on-target NPU contention, priority inheritance, adaptive QoS 실험
 
 ## Confirmed Baseline
 

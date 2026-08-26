@@ -36,6 +36,9 @@ results/figures/*
 
 # Final comparison tables and analysis reports are tracked.
 
+# Local reference papers
+200000943048_20260826140819.pdf
+
 # Build outputs
 build/
 dist/

@@ -131,36 +131,43 @@ RAM
 
 ## Experiment 5 - RTOS Interference
 
-AI task와 background workload를 동시에 실행한다.
+동일한 INT8 model을 사용하는 periodic inference task 3개가 하나의 Neural-ART NPU와
+model/activation memory를 공유하도록 구성한다. 각 task는 base period 기반 RM fixed
+priority를 사용하고 application mutex를 full inference 동안 보유한다. 별도의 custom
+dispatcher와 synthetic CPU BackgroundTask는 사용하지 않는다.
 
 보드 도착 전에 다음 실험 contract와 portable skeleton을 먼저 준비한다.
 
-- Inference/Background/Monitor/Logger task 정의
-- period, deadline, priority 초깃값
+- InferenceTask A/B/C, Monitor, QoSController, Logger contract
+- base period RM priority, deadline=period, full-inference mutex policy
 - DWT profiler와 공통 metrics record
 - UART CSV schema
-- 0/20/40/60/80% synthetic workload 정의
-- 33/66/100 ms inference-period QoS 정의
+- logical NPU busy ratio와 DMR window aggregation
+- global inference-period QoS scale 정의
+- non-preemptive blocking/response-time analysis
 
 실제 timing 결과는 보드에서만 기록한다. host stub이나 compiler estimate를
 on-target RTOS 결과로 사용하지 않는다.
 
-Background workload level:
+Fixed-QoS offered-load level:
 
 ```text
-0%
-20%
-40%
-60%
-80%
+Low QoS: long common period scale
+Medium QoS: middle common period scale
+High QoS: short common period scale
 ```
 
+정확한 base period와 scale은 보드에서 warm inference service time `C_i`를 측정한 뒤
+logical NPU utilization reference `U*=0.67`을 기준으로 정한다. `0.67`은
+non-preemptive RM 보장값이 아니며 실측 DMR과 response-time analysis를 함께 사용한다.
+
 측정:
-- AI inference latency
+- task별 execution/response/mutex-wait time
 - deadline miss ratio
-- jitter
-- CPU utilization
-- queue backlog
+- release/completion jitter
+- logical NPU utilization
+- ready 또는 mutex-waiting job 수
+- priority inheritance/blocking trace
 
 ---
 
@@ -170,11 +177,13 @@ Background workload level:
 고정 AI QoS
 
 ### Adaptive
-resource monitor 결과를 이용해 QoS 변경
+Monitor가 control window마다 logical NPU utilization, DMR, 현재 QoS state를 만들고,
+분리된 QoSController가 다음 window의 global period scale을 선택한다. 초기에는 board-local
+heuristic을 사용하고 이후 UART를 통해 PC RL selector로 교체한다.
 
 비교:
 
-| Method | Accuracy proxy | Deadline miss | Avg latency | Utilization |
+| Method | Service QoS | Deadline miss | Avg response | NPU utilization |
 |---|---:|---:|---:|---:|
 | Fixed High QoS | TBD | TBD | TBD | TBD |
 | Fixed Low QoS | TBD | TBD | TBD | TBD |

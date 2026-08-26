@@ -12,9 +12,10 @@ validation은 끝났으며, board-independent architecture와 portable firmware 
 
 첫 portable module로 task 실행 record와 cycle/time 변환을 담당하는
 `system_metrics`를 구현하고 host test를 통과했다. 하드웨어 cycle reader를 함수
-포인터로 주입하는 `profiler` interface와 host test도 구현했다. 현재 다음 작업은 RTOS
-task contract와 metrics ownership 확정이다. 두 모듈 모두 HAL, FreeRTOS, CMSIS device
-header에 의존하지 않는다.
+포인터로 주입하는 `profiler` interface와 host test도 구현했다. RTOS 구조는 synthetic
+BackgroundTask 대신 세 periodic InferenceTask가 application NPU mutex를 경쟁하는
+non-preemptive fixed-priority RM 방식으로 확정했다. Monitor와 QoSController는 분리하며,
+다음 작업은 이 contract를 window metrics와 portable C interface로 옮기는 것이다.
 
 완료된 end-to-end 경로:
 
@@ -237,11 +238,11 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 
 ### Before board arrival
 
-1. `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` contract를 확정한다.
-2. period/deadline/priority 초깃값과 metrics ownership을 정의한다.
-3. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
-4. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
-5. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
+1. windowed logical NPU utilization과 DMR aggregate contract를 정의한다.
+2. `qos_window_state_t`와 `qos_action_t` portable interface를 작성한다.
+3. global QoS scale, lower band, hysteresis, cooldown 규칙을 정의한다.
+4. stream ID, mutex wait, window index를 반영해 metrics/UART CSV schema를 갱신한다.
+5. non-preemptive RM response-time analysis module/test 방식을 정한다.
 6. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 확장한다.
 
 완료된 항목:
@@ -252,6 +253,10 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 - 함수 포인터와 context를 주입받는 board-independent profiler interface
 - `system_metrics` host test 및 strict C11 warning-free build
 - `profiler` host test 및 strict C11 warning-free build
+- periodic inference task 3개와 base-period RM relative priority contract
+- full-inference application NPU mutex와 priority inheritance policy
+- Monitor/QoSController 분리 및 metrics single-writer ownership
+- logical NPU utilization `U*=0.67`, DMR `M*=0.05` 초기 reference
 
 보드가 없으므로 CPU clock, peripheral handle, memory address, generated AI symbol을
 임의로 hardcode하지 않는다.
@@ -264,9 +269,10 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 4. 단일 inference 결과를 ONNX Runtime output과 비교한다.
 5. DWT CYCCNT profiler와 UART CSV logging을 구현한다.
 6. latency mean/p50/p95/max, throughput, Flash/RAM을 보드에서 측정한다.
-7. inference를 33 ms period의 FreeRTOS task로 전환한다.
-8. background load 0/20/40/60/80%에서 deadline miss와 jitter를 측정한다.
-9. fixed QoS 결과 후 33/66/100 ms inference period 기반 adaptive QoS를 구현한다.
+7. 동일 모델을 사용하는 periodic InferenceTask 3개와 공용 NPU mutex를 구성한다.
+8. warm inference `C_i` 측정 후 `U*=0.67` 기준 base period/QoS scale을 확정한다.
+9. fixed global QoS에서 blocking, logical NPU utilization, DMR을 측정한다.
+10. board-local heuristic QoS를 구현한 뒤 PC RL state/action transport로 확장한다.
 
 최초 bring-up에는 camera를 연결하지 않는다.
 
@@ -276,7 +282,8 @@ reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU cl
 - Teacher/KD tuning: 추가 accuracy 연구가 필요할 때만 수행
 - input-resolution/model-switching QoS: 각 variant를 다시 export/analyze한 뒤 수행
 - camera: static test-vector inference 이후
-- pruning, object detection, RL controller, dashboard: MVP 이후
+- PC RL controller: board-local heuristic과 UART state/action contract 완료 이후
+- pruning, object detection, dashboard: MVP 이후
 
 ## 10. Resume Reading Order
 
@@ -303,10 +310,10 @@ Before editing, run `git status --short` and preserve unrelated user changes.
 
 ## 11. Git Reference
 
-Last pushed commit before the current RTOS-plan documentation adjustment:
+Last pushed commit before the current RTOS architecture documentation adjustment:
 
 ```text
-bd9b53f Refresh project documentation and roadmap
+5715b8f test: add portable profiler host coverage
 ```
 
 Always use `git status --short` and `git log -1 --oneline` instead of assuming this

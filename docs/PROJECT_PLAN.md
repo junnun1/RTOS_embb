@@ -17,7 +17,9 @@
 
 따라서 AI 정확도만 최대화하는 방식은 실제 embedded real-time system에서는 적합하지 않을 수 있다.
 
-본 프로젝트는 경량 CNN과 model compression을 이용하여 AI workload를 MCU에 배포하고, FreeRTOS 환경에서 다른 task와 함께 실행했을 때 발생하는 latency, resource contention, deadline miss를 분석한다.
+본 프로젝트는 경량 CNN과 model compression을 이용하여 AI workload를 MCU에 배포하고,
+여러 periodic FreeRTOS inference task가 단일 NPU를 공유할 때 발생하는 blocking,
+resource utilization, deadline miss를 분석한다.
 
 이후 시스템 상태에 따라 AI service quality를 조정하여 real-time 안정성을 높이는 적응형 구조를 구현한다.
 
@@ -44,7 +46,8 @@ Student + KD INT8 PTQ
 
 ### Objective C - RTOS Integration
 
-AI inference를 독립 FreeRTOS task로 구성하고 다른 periodic task와 병행 실행한다.
+동일한 AI model을 실행하는 여러 periodic FreeRTOS task를 RM fixed priority로 구성하고,
+application mutex를 통해 단일 NPU를 full-inference 단위로 공유한다.
 
 ### Objective D - Real-Time Analysis
 
@@ -131,8 +134,9 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 - task/priority/period/deadline contract
 - profiler and metrics interface
 - UART CSV schema
-- synthetic workload definition
-- inference-period QoS policy
+- multi-inference task와 full-inference NPU mutex contract
+- windowed logical NPU utilization/DMR contract
+- global inference-period QoS policy
 - portable firmware skeleton
 
 ### M3 - Board Bring-up
@@ -146,9 +150,9 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 - latency 측정
 
 ### M5 - Real-Time Experiment
-- background workload
+- multiple periodic inference streams와 NPU mutex contention
 - deadline 측정
-- utilization logging
+- logical NPU utilization과 blocking logging
 
 ### M6 - Adaptive QoS
 - heuristic controller
@@ -167,7 +171,7 @@ QAT는 PTQ 정확도 손실이 커질 때만 수행하는 조건부 항목이다
 | M0 - Planning | Complete | repository/config/dataset/model 확정 |
 | M1 - ML Baseline | Complete | Student 95.46%, Teacher 95.03% |
 | M2 - Compression | Complete | baseline/KD FP32·PTQ 비교 및 NPU mapping 완료 |
-| M2.5 - Pre-board RTOS | In progress | metrics+host test 완료, portable profiler 구현 |
+| M2.5 - Pre-board RTOS | In progress | metrics/profiler host test와 multi-inference RM/NPU mutex architecture 확정 |
 | M3 - Board Bring-up | Pending | UART, FreeRTOS periodic task, test-vector inference |
 | M4 이후 | Pending | on-target inference 전 단계 |
 

@@ -5,8 +5,9 @@
 PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포 후보는
 `student_baseline_int8_qdq.onnx`이다. 다음 단계는 보드 도착을 기다리지 않고
 진행할 수 있는 RTOS architecture, measurement contract, portable firmware skeleton
-준비다. `system_metrics` 구현과 host test, portable `profiler` interface와 host test까지
-진행했으며, 그 다음에 STM32N657 board bring-up과 실제 inference를 수행한다.
+준비다. 여러 periodic inference task가 단일 NPU mutex를 경쟁하는 non-preemptive
+fixed-priority RM 구조와 metrics ownership을 확정했다. `system_metrics`와 `profiler`
+host test도 완료했으며, 다음은 window metrics/QoS contract를 portable C로 옮기는 단계다.
 
 ## Completed: PC Compression and Validation
 
@@ -59,9 +60,12 @@ QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. 
 
 ### P0 — 바로 진행
 
-- [ ] `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` 역할 확정
-- [ ] task period, relative deadline, priority 초깃값 확정
-- [ ] task 간 공유 metrics 구조와 ownership 정의
+- [x] 세 `InferenceTask`, `MonitorTask`, `QoSControllerTask`, `LoggerTask` 역할 확정
+- [x] base-period RM relative priority와 deadline=period 정책 확정
+- [ ] 보드 warm inference 측정 후 base period와 QoS scale 수치 확정
+- [x] task 간 metrics/NPU/UART ownership 정의
+- [x] full-inference application mutex와 priority inheritance 정책 확정
+- [x] 상세 RTOS/QoS architecture와 설계 변경 근거 문서화
 - [x] 공통 `task_run_record_t`와 execution/response/deadline 계산 구현
 - [x] hardware cycle reader를 주입받는 portable profiler interface 구현
 - [x] cycle counter wrap-around와 cycle-to-time 변환 정책 구현
@@ -69,8 +73,9 @@ QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. 
 - [x] profiler host test 작성 및 strict C11 build 통과
 - [ ] mean/min/max와 p95 집계 방식 결정
 - [ ] UART CSV log schema 정의
-- [ ] synthetic workload의 0/20/40/60/80% 부하 생성 방식 정의
-- [ ] QoS 33/66/100 ms와 hysteresis/cooldown 규칙 정의
+- [ ] windowed logical NPU utilization과 DMR aggregation 구현
+- [ ] global QoS scale과 hysteresis/cooldown 규칙 정의
+- [ ] non-preemptive RM response-time analysis 방식 구현/검증
 - [ ] hardware dependency를 분리한 portable C skeleton 작성
 
 ### Implemented portable modules
@@ -92,6 +97,9 @@ tests/firmware/test_profiler.c
 - hardware boundary: HAL, FreeRTOS, CMSIS/DWT 직접 의존성 없음
 - profiler test: fake reader, invalid argument, 일반 cycle 차이, wrap-around, clock getter 검증
 - pending: STM32N657 DWT adapter
+- architecture: periodic inference task 3개, FreeRTOS fixed priority, shared NPU mutex
+- control split: Monitor는 state 생성, QoSController는 action 선택/검증
+- resource state: logical NPU busy ratio와 inference DMR, 초기 reference 0.67/0.05
 
 ### P1 — 보드 연동용 산출물 준비
 
@@ -102,12 +110,14 @@ tests/firmware/test_profiler.c
 
 ### Proposed initial tasks
 
-| Task | Initial period | Relative deadline | Initial priority |
+| Task | Initial period | Relative deadline | Relative priority |
 |---|---:|---:|---|
-| Inference | 33 ms | 33 ms | High |
-| Background workload | configurable | configurable | Medium |
-| Monitor | 100 ms | 100 ms | Medium |
-| Logger | 1000 ms | 1000 ms | Low |
+| InferenceTask_A | `T_A`, profiling 후 확정 | current period | highest inference priority |
+| InferenceTask_B | `T_B`, profiling 후 확정 | current period | middle inference priority |
+| InferenceTask_C | `T_C`, profiling 후 확정 | current period | lowest inference priority |
+| Monitor | control window `W` | `W` | above inference, short execution |
+| QoSController | window notification | before next window | below Monitor, short execution |
+| Logger | event-driven 또는 1000 ms | non-critical | Low |
 
 Capture와 camera는 최초 inference 검증 이후 추가한다.
 
@@ -121,23 +131,24 @@ execution_time
 response_time
 deadline_miss
 iteration
-background_load
-queue_backlog
+stream_id
+mutex_wait_time
+ready_or_waiting_jobs
 qos_level
 ```
 
 ### Initial UART CSV schema
 
 ```csv
-timestamp_ms,task_name,iteration,period_ms,execution_us,response_us,deadline_miss,background_load,qos_level
+window_index,npu_util_permille,dmr_permille,qos_level,task_id,job_id,period_ms,execution_us,response_us,deadline_miss,mutex_wait_us
 ```
 
 ### Portable firmware skeleton
 
 ```text
 firmware/RTOS/task_inference.c/.h
-firmware/RTOS/task_background.c/.h
 firmware/RTOS/task_monitor.c/.h
+firmware/RTOS/task_qos_controller.c/.h
 firmware/RTOS/task_logger.c/.h
 firmware/System/profiler.c/.h
 firmware/System/system_metrics.c/.h
@@ -170,24 +181,29 @@ firmware/AI/ai_model_adapter.c/.h
 
 ## RTOS Interference Experiment
 
-- [ ] inference를 periodic FreeRTOS task로 구성
-- [ ] synthetic background workload 구현
-- [ ] load 0/20/40/60/80% 조건 구성
+- [ ] 동일 모델을 사용하는 periodic inference task 3개 구성
+- [ ] base period 기준 RM fixed priority 적용
+- [ ] full-inference 범위 application NPU mutex 적용
+- [ ] mutex priority inheritance와 blocking trace 확인
+- [ ] fixed QoS별 offered logical NPU utilization 조건 구성
 - [ ] task execution time과 jitter 측정
 - [ ] deadline miss ratio 측정
-- [ ] queue backlog와 CPU utilization 기록
-- [ ] 필요하면 NPU/CPU contention 관찰 항목 추가
+- [ ] mutex wait, ready/waiting job 수, logical NPU busy ratio 기록
+- [ ] non-preemptive response-time analysis와 실측 결과 비교
 
 ## Adaptive QoS
 
-- [ ] fixed inference period baseline 측정
-- [ ] QoS level을 33/66/100 ms inference period로 정의
+- [ ] fixed global QoS period-scale baseline 측정
+- [ ] warm inference time과 `U*=0.67` 기준으로 base period/QoS scale 확정
 - [ ] overload/underload threshold와 hysteresis 정의
-- [ ] heuristic controller 구현
-- [ ] fixed QoS와 adaptive QoS의 deadline miss/latency 비교
+- [ ] MonitorTask와 QoSControllerTask 분리 구현
+- [ ] board-local heuristic controller 구현
+- [ ] fixed QoS와 adaptive QoS의 utilization/DMR/QoS 비교
+- [ ] UART state/action protocol과 PC action timeout/fallback 정의
 
 현재 모델은 static `96x96`이므로 초기 QoS는 input resolution이나 model switching이
-아니라 inference period만 변경한다.
+아니라 세 inference stream의 공통 period scale만 변경한다. task별 QoS vector와 PC RL
+controller는 global heuristic 안정화 이후 확장한다.
 
 ## Required Local Artifacts
 
@@ -217,5 +233,7 @@ results/reports/kd_int8_network_analyze_report.txt
 - QAT: 현재 PTQ 정확도 손실이 작아 보류
 - Teacher/KD 재튜닝: 추가 accuracy 연구가 필요할 때만 수행
 - camera driver: static test-vector inference 이후
+- synthetic CPU BackgroundTask: 여러 inference stream 기반 NPU 경쟁으로 대체
+- task별 QoS vector/priority 재배치: global QoS baseline 이후
 - multi-model/input-resolution QoS: 각 variant의 NPU mapping 검증 이후
 - pruning, object detection, RL controller, dashboard: MVP 이후

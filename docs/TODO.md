@@ -5,7 +5,7 @@
 PC-side compression과 ST Edge AI compiler 검증은 완료했다. 현재 배포 후보는
 `student_baseline_int8_qdq.onnx`이다. 다음 단계는 보드 도착을 기다리지 않고
 진행할 수 있는 RTOS architecture, measurement contract, portable firmware skeleton
-준비다. `system_metrics` 구현과 host test, portable `profiler` interface 구현까지
+준비다. `system_metrics` 구현과 host test, portable `profiler` interface와 host test까지
 진행했으며, 그 다음에 STM32N657 board bring-up과 실제 inference를 수행한다.
 
 ## Completed: PC Compression and Validation
@@ -66,7 +66,7 @@ QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. 
 - [x] hardware cycle reader를 주입받는 portable profiler interface 구현
 - [x] cycle counter wrap-around와 cycle-to-time 변환 정책 구현
 - [x] `system_metrics` host test 작성 및 strict C11 build 통과
-- [ ] profiler host test 작성
+- [x] profiler host test 작성 및 strict C11 build 통과
 - [ ] mean/min/max와 p95 집계 방식 결정
 - [ ] UART CSV log schema 정의
 - [ ] synthetic workload의 0/20/40/60/80% 부하 생성 방식 정의
@@ -79,6 +79,7 @@ QAT는 미완료가 아니라 현재 조건에서 의도적으로 생략했다. 
 firmware/System/system_metrics.c/.h
 firmware/System/profiler.c/.h
 tests/firmware/test_system_metrics.c
+tests/firmware/test_profiler.c
 ```
 
 현재 상태:
@@ -89,7 +90,8 @@ tests/firmware/test_system_metrics.c
 - wrap-around: 32-bit unsigned subtraction 정책 적용 및 host test 통과
 - `profiler`: cycle reader 함수 포인터/context/CPU clock 주입 구조 구현
 - hardware boundary: HAL, FreeRTOS, CMSIS/DWT 직접 의존성 없음
-- pending: profiler fake-reader test와 STM32N657 DWT adapter
+- profiler test: fake reader, invalid argument, 일반 cycle 차이, wrap-around, clock getter 검증
+- pending: STM32N657 DWT adapter
 
 ### P1 — 보드 연동용 산출물 준비
 

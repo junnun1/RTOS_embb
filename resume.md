@@ -1,6 +1,6 @@
 # Project Resume
 
-이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-25 기준이며,
+이 파일은 작업 재개의 단일 진입점이다. 아래 내용은 2026-08-26 기준이며,
 PC-side compression과 STM32N6 compiler validation을 완료하고 pre-board RTOS
 portable module 구현을 시작한 상태를 기록한다.
 
@@ -12,8 +12,9 @@ validation은 끝났으며, board-independent architecture와 portable firmware 
 
 첫 portable module로 task 실행 record와 cycle/time 변환을 담당하는
 `system_metrics`를 구현하고 host test를 통과했다. 하드웨어 cycle reader를 함수
-포인터로 주입하는 `profiler` interface도 구현했으며, 현재 다음 작업은 profiler host
-test 작성이다. 두 모듈 모두 HAL, FreeRTOS, CMSIS device header에 의존하지 않는다.
+포인터로 주입하는 `profiler` interface와 host test도 구현했다. 현재 다음 작업은 RTOS
+task contract와 metrics ownership 확정이다. 두 모듈 모두 HAL, FreeRTOS, CMSIS device
+header에 의존하지 않는다.
 
 완료된 end-to-end 경로:
 
@@ -218,6 +219,7 @@ cc -std=c11 \
 firmware/System/system_metrics.c/.h
 firmware/System/profiler.c/.h
 tests/firmware/test_system_metrics.c
+tests/firmware/test_profiler.c
 ```
 
 `system_metrics`는 release/start/end cycle, execution/response cycle과 microsecond,
@@ -225,9 +227,9 @@ deadline miss, task/QoS/background metadata를 `task_run_record_t`로 정의한�
 차이는 unsigned subtraction으로 계산하며, cycle-to-us 변환은 64-bit 중간 연산과
 `UINT32_MAX` saturation을 사용한다.
 
-`profiler`는 cycle reader 함수와 context, CPU clock을 주입받는다. host에서는 fake
-reader, 보드에서는 향후 DWT CYCCNT adapter를 연결한다. profiler 전용 host test와
-실제 DWT adapter는 아직 미완료다.
+`profiler`는 cycle reader 함수와 context, CPU clock을 주입받는다. host test는 fake
+reader 주입, invalid argument, 일반 cycle 차이, 32-bit wrap-around, CPU clock 조회를
+검증한다. 보드용 DWT CYCCNT adapter는 아직 미완료다.
 
 ## 8. Immediate Next Work
 
@@ -237,11 +239,10 @@ reader, 보드에서는 향후 DWT CYCCNT adapter를 연결한다. profiler 전�
 
 1. `InferenceTask`, `BackgroundTask`, `MonitorTask`, `LoggerTask` contract를 확정한다.
 2. period/deadline/priority 초깃값과 metrics ownership을 정의한다.
-3. profiler host test를 추가해 fake cycle reader, invalid argument, wrap-around를 검증한다.
-4. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
-5. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
-6. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
-7. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 확장한다.
+3. mean/min/max/p95 집계와 UART CSV schema를 정의한다.
+4. 0/20/40/60/80% synthetic workload 생성 방식을 설계한다.
+5. 33/66/100 ms QoS, threshold, hysteresis, cooldown을 정의한다.
+6. HAL/FreeRTOS/AI runtime dependency를 adapter로 분리한 portable C skeleton을 확장한다.
 
 완료된 항목:
 
@@ -250,6 +251,7 @@ reader, 보드에서는 향후 DWT CYCCNT adapter를 연결한다. profiler 전�
 - 64-bit 중간 연산과 saturation을 포함한 cycle-to-us 변환
 - 함수 포인터와 context를 주입받는 board-independent profiler interface
 - `system_metrics` host test 및 strict C11 warning-free build
+- `profiler` host test 및 strict C11 warning-free build
 
 보드가 없으므로 CPU clock, peripheral handle, memory address, generated AI symbol을
 임의로 hardcode하지 않는다.

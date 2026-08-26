@@ -108,6 +108,34 @@ tests/firmware/test_profiler.c
 - [ ] ST Edge AI generated runtime adapter interface 정의
 - [ ] CubeMX 생성 프로젝트에 연결할 integration checklist 작성
 
+### Windows toolchain and FreeRTOS setup
+
+ST GUI/toolchain은 Windows에 설치하고 WSL에 중복 설치하지 않는다. WSL은 현재
+portable C/Python 개발과 Git 작업에 사용하고, CubeMX/CubeIDE/Programmer는 Windows에서
+실행한다.
+
+- [ ] Windows의 STM32CubeIDE, STM32CubeMX, STM32CubeProgrammer 설치와 버전 확인
+- [ ] CubeMX에서 최신 호환 STM32CubeN6 firmware package 설치
+- [ ] CubeMX Software Packs에서 X-CUBE-FREERTOS 설치
+- [ ] `STM32N657X0H3Q`, Secure domain only, FSBL+Appli 프로젝트 생성
+- [ ] context를 Application으로 선택하고 X-CUBE-FREERTOS/CMSIS-RTOS2 활성화
+- [ ] HAL timebase를 TIM16으로 지정하고 SysTick을 FreeRTOS kernel tick에 사용
+- [ ] preemption, time slicing, 1 kHz tick, mutex/queue, stack overflow check 설정
+- [ ] default LED blink task 생성 및 build
+- [ ] 보드 도착 후 DEV boot, flash/debug, FreeRTOS Task List 확인
+- [ ] UART LoggerTask 추가
+- [ ] 단일 InferenceTask와 warm inference timing 검증
+- [ ] priority inheritance가 설정된 application NPU mutex 추가
+- [ ] InferenceTask B/C와 RM fixed priority 추가
+- [ ] metrics queue, MonitorTask, QoSControllerTask 순서로 추가
+- [ ] Neural-ART runtime에 FreeRTOS OSAL 연동
+  - `LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6`
+  - `LL_ATON_OSAL=LL_ATON_OSAL_FREERTOS`
+  - `LL_ATON_RT_MODE=LL_ATON_RT_ASYNC`
+  - `ll_aton_osal_freertos.c` 포함
+- [ ] generated runtime 확인 후 `FREERTOS_HAS_PARALLEL_NETWORKS` 정책 확정
+- [ ] application mutex가 input binding부터 output copy까지 full inference를 보호하는지 확인
+
 ### Proposed initial tasks
 
 | Task | Initial period | Relative deadline | Relative priority |
